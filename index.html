@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft - Isla con Animales + Bloques 100% Sólidos</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #info { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.75); padding: 12px 20px; border-radius: 8px; pointer-events: none; z-index: 10; font-size: 14px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); line-height: 1.8; }
+        #info strong { color: #4CAF50; }
+        #info span { display: inline-block; background: rgba(255,255,255,0.15); padding: 0 10px; border-radius: 4px; margin: 0 4px; }
+        #expandLabel { position: absolute; top: 20px; right: 20px; color: white; background: rgba(76, 175, 80, 0.85); padding: 12px 22px; border-radius: 8px; pointer-events: none; z-index: 10; font-size: 16px; font-weight: bold; backdrop-filter: blur(4px); border: 2px solid #81c784; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); transition: transform 0.2s, background 0.2s; }
+        #expandLabel.key-pressed { transform: scale(1.1); background: rgba(102, 187, 106, 1); }
+        #expandLabel .key { display: inline-block; background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 5px; margin-left: 8px; border: 1px solid rgba(255,255,255,0.4); font-family: monospace; font-size: 15px; }
+        #controles { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.65); padding: 12px 24px; border-radius: 40px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15); font-size: 14px; letter-spacing: 1px; pointer-events: none; z-index: 10; display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; }
+        #controles span { display: flex; align-items: center; gap: 6px; }
+        #controles i { font-style: normal; background: rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 16px; font-weight: bold; }
+        #bloqueo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.88); padding: 25px 45px; border-radius: 16px; z-index: 20; text-align: center; border: 2px solid #4CAF50; pointer-events: none; backdrop-filter: blur(8px); }
+        #bloqueo h2 { margin-top: 0; color: #4CAF50; }
+        #bloqueo button { background: #4CAF50; border: none; color: white; padding: 12px 35px; border-radius: 30px; font-size: 18px; cursor: pointer; margin-top: 15px; pointer-events: auto; transition: 0.3s; font-weight: bold; }
+        #bloqueo button:hover { background: #45a049; transform: scale(1.05); }
+        #bloqueo .keys { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+        #bloqueo .keys kbd { background: #333; padding: 4px 12px; border-radius: 6px; border: 1px solid #555; font-size: 16px; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 15; opacity: 0.9; }
+        #crosshair::before, #crosshair::after { content: ''; position: absolute; background-color: rgba(255, 255, 255, 0.8); border-radius: 2px; }
+        #crosshair::before { width: 2px; height: 20px; top: -10px; left: -1px; }
+        #crosshair::after { width: 20px; height: 2px; top: -1px; left: -10px; }
+        #crosshair .dot { position: absolute; width: 3px; height: 3px; background-color: rgba(255, 255, 255, 0.6); border-radius: 50%; top: -1.5px; left: -1.5px; }
+        #errorMsg { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff6b6b; background: rgba(0,0,0,0.95); padding: 20px 30px; border-radius: 10px; z-index: 100; text-align: center; border: 2px solid #ff6b6b; font-size: 16px; max-width: 80%; }
+        @media (max-width: 700px) { #controles { font-size: 11px; padding: 8px 16px; gap: 12px; } #info { font-size: 12px; padding: 8px 14px; } #bloqueo { padding: 18px 25px; } #expandLabel { font-size: 13px; padding: 8px 14px; } }
+    </style>
+</head>
+<body>
+    <div id="crosshair"><div class="dot"></div></div>
+    <div id="info">
+        <strong>🏝️ Isla con Animales + 🧱 Bloques Sólidos</strong> · Click <span>IZQUIERDO</span> poner · Click <span>DERECHO</span> destruir<br>
+        <strong>🔢 Bloques:</strong> <span>1</span> Pasto <span>2</span> Tierra <span>3</span> Piedra <span>4</span> Madera <span>5</span> Hoja <span>6</span> Nieve<br>
+        <strong>💾 Guardado:</strong> automático · <span>R</span> borrar partida · El perro te sigue
+    </div>
+    <div id="expandLabel">🌍 Expandir isla <span class="key">Z</span></div>
+    <div id="controles">
+        <span>⬆️⬇️⬅️➡️ <i>WASD / Flechas</i></span>
+        <span>🖱️ <i>Ratón</i></span>
+        <span>⬆️ <i>ESPACIO</i></span>
+        <span>🔢 <i>1-6</i></span>
+        <span>🌍 <i>Z</i></span>
+        <span>💾 <i>R</i></span>
+    </div>
+    <div id="bloqueo">
+        <h2>⛏️ Isla con Animales + 🧱 Bloques</h2>
+        <p>Construye con las texturas clásicas y explora con tu compañero</p>
+        <div class="keys"><kbd>W A S D</kbd> <kbd>↑ ← ↓ →</kbd> <kbd>Espacio</kbd> <kbd>Z</kbd> <kbd>R</kbd></div>
+        <p style="font-size:14px; opacity:0.8;">Click izquierdo: poner · Click derecho: destruir</p>
+        <p style="font-size:13px; opacity:0.7;">💾 El progreso se guarda automáticamente</p>
+        <button id="bloquearBtn">🎮 Comenzar</button>
+    </div>
+    <div id="errorMsg"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        window.addEventListener('error', (e) => {
+            const el = document.getElementById('errorMsg');
+            el.style.display = 'block';
+            el.innerHTML = '⚠️ Error: ' + (e.message || e.error) + '<br><small>' + (e.filename || '') + ':' + (e.lineno || '') + '</small>';
+            console.error(e);
+        });
+
+        // ============================================================
+        // CONFIGURACIÓN INICIAL
+        // ============================================================
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 100, 250);
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
+        camera.position.set(0, 2.6, 10);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new PointerLockControls(camera, renderer.domElement);
+        const bloqueoDiv = document.getElementById('bloqueo');
+        const btnBloquear = document.getElementById('bloquearBtn');
+        const expandLabel = document.getElementById('expandLabel');
+        btnBloquear.addEventListener('click', () => controls.lock());
+        controls.addEventListener('lock', () => bloqueoDiv.style.display = 'none');
+        controls.addEventListener('unlock', () => bloqueoDiv.style.display = 'block');
+
+        // ============================================================
+        // LUCES
+        // ============================================================
+        scene.add(new THREE.AmbientLight(0x505070));
+        const sunLight = new THREE.DirectionalLight(0xfff3e0, 1.3);
+        sunLight.position.set(40, 50, 30);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 200;
+        sunLight.shadow.camera.left = -100;
+        sunLight.shadow.camera.right = 100;
+        sunLight.shadow.camera.top = 100;
+        sunLight.shadow.camera.bottom = -100;
+        scene.add(sunLight);
+        const fillLight = new THREE.DirectionalLight(0x88aaff, 0.35);
+        fillLight.position.set(-30, 20, -40);
+        scene.add(fillLight);
+
+        // ============================================================
+        // TEXTURAS PROCEDURALES
+        // ============================================================
+        function generateBlockTexture(baseColor, borderColor) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 64, 64);
+            for (let i = 0; i < 150; i++) {
+                const x = Math.floor(Math.random() * 64);
+                const y = Math.floor(Math.random() * 64);
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+                ctx.fillRect(x, y, 2, 2);
+            }
+            if (borderColor) {
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = 4;
+                ctx.strokeRect(2, 2, 60, 60);
+            }
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            return texture;
+        }
+
+        const BLOCK_MATERIALS = {
+            1: new THREE.MeshLambertMaterial({ map: generateBlockTexture('#689f38', '#33691e') }), // PASTO
+            2: new THREE.MeshLambertMaterial({ map: generateBlockTexture('#795548', '#4e342e') }), // TIERRA
+            3: new THREE.MeshLambertMaterial({ map: generateBlockTexture('#9e9e9e', '#424242') }), // PIEDRA
+            4: new THREE.MeshLambertMaterial({ map: generateBlockTexture('#a1887f', '#5d4037') }), // MADERA
+            5: new THREE.MeshLambertMaterial({ map: generateBlockTexture('#3FA34D', '#1b5e20') }), // HOJA
+            6: new THREE.MeshLambertMaterial({ map: generateBlockTexture('#f5faff', '#b0bec5') })  // NIEVE
+        };
+
+        // ============================================================
+        // VARIABLES GLOBALES
+        // ============================================================
+        const SAVE_KEY = 'minecraft_isla_save_v27';
+        const AUTO_SAVE_INTERVAL = 2000;
+        let lastSaveTime = 0;
+        let selectedBlock = 1;
+        const groundY = 0;
+        let rx = 22, rz = 16;
+        const beachWidth = 2.5;
+        const EXPAND_AMOUNT = 7;
+        const WALK_DURATION = 3.0;
+        const IDLE_DURATION = 9.0;
+
+        // ============================================================
+        // ESTADOS ANIMALES SALVAJES
+        // ============================================================
+        let cowSpeed = 1.5, cowDirX = 0, cowDirZ = 1, cowTime = 0;
+        let cowIsTurning = false, cowTurnTargetX = 0, cowTurnTargetZ = 1;
+        const cowTurnSpeed = 3.0;
+        let cowCycleTimer = 0, cowIsWalking = true;
+
+        let horseSpeed = 1.5, horseDirX = 0, horseDirZ = 1, horseTime = 0;
+        let horseIsTurning = false, horseTurnTargetX = 0, horseTurnTargetZ = 1;
+        const horseTurnSpeed = 3.0;
+        let horseCycleTimer = 0, horseIsWalking = true;
+
+        let pigSpeed = 1.2, pigDirX = 0, pigDirZ = 1, pigTime = 0;
+        let pigIsTurning = false, pigTurnTargetX = 0, pigTurnTargetZ = 1;
+        const pigTurnSpeed = 3.0;
+        let pigCycleTimer = 0, pigIsWalking = true;
+
+        let chickenSpeed = 1.0, chickenDirX = 0, chickenDirZ = 1, chickenTime = 0;
+        let chickenIsTurning = false, chickenTurnTargetX = 0, chickenTurnTargetZ = 1;
+        const chickenTurnSpeed = 3.5;
+        let chickenCycleTimer = 0, chickenIsWalking = true;
+
+        let tigerSpeed = 1.8, tigerDirX = 0, tigerDirZ = 1, tigerTime = 0;
+        let tigerIsTurning = false, tigerTurnTargetX = 0, tigerTurnTargetZ = 1;
+        const tigerTurnSpeed = 3.0;
+        let tigerCycleTimer = 0, tigerIsWalking = true;
+
+        let pandaSpeed = 1.0, pandaDirX = 0, pandaDirZ = 1, pandaTime = 0;
+        let pandaIsTurning = false, pandaTurnTargetX = 0, pandaTurnTargetZ = 1;
+        const pandaTurnSpeed = 2.5;
+        let pandaCycleTimer = 0, pandaIsWalking = true;
+
+        let foxSpeed = 2.0, foxDirX = 0, foxDirZ = 1, foxTime = 0;
+        let foxIsTurning = false, foxTurnTargetX = 0, foxTurnTargetZ = 1;
+        const foxTurnSpeed = 3.5;
+        let foxCycleTimer = 0, foxIsWalking = true;
+
+        let leopardSpeed = 2.0, leopardDirX = 0, leopardDirZ = 1, leopardTime = 0;
+        let leopardIsTurning = false, leopardTurnTargetX = 0, leopardTurnTargetZ = 1;
+        const leopardTurnSpeed = 3.2;
+        let leopardCycleTimer = 0, leopardIsWalking = true;
+
+        let lionSpeed = 1.8, lionDirX = 0, lionDirZ = 1, lionTime = 0;
+        let lionIsTurning = false, lionTurnTargetX = 0, lionTurnTargetZ = 1;
+        const lionTurnSpeed = 2.8;
+        let lionCycleTimer = 0, lionIsWalking = true;
+
+        let cowGroup, horseGroup, pigGroup, chickenGroup, tigerGroup, pandaGroup, foxGroup, leopardGroup, lionGroup;
+        let cowLegFrontLeft, cowLegFrontRight, cowLegBackLeft, cowLegBackRight, cowTailGroup, cowHeadGroup;
+        let hLegFrontLeft, hLegFrontRight, hLegBackLeft, hLegBackRight, horseTailGroup, horseNeckGroup;
+        let pigLegFrontLeft, pigLegFrontRight, pigLegBackLeft, pigLegBackRight, pigTailGroup, pigHeadGroup;
+        let chickenLegLeft, chickenLegRight, chickenHeadGroup, chickenTailGroup;
+        let tigerLegFrontLeft, tigerLegFrontRight, tigerLegBackLeft, tigerLegBackRight, tigerTailGroup, tigerHeadGroup;
+        let pandaLegFrontLeft, pandaLegFrontRight, pandaLegBackLeft, pandaLegBackRight, pandaHeadGroup;
+        let foxLegFrontLeft, foxLegFrontRight, foxLegBackLeft, foxLegBackRight, foxHeadGroup, foxTailGroup;
+        let leopardLegFrontLeft, leopardLegFrontRight, leopardLegBackLeft, leopardLegBackRight, leopardHeadGroup, leopardTailGroup;
+        let lionLegFrontLeft, lionLegFrontRight, lionLegBackLeft, lionLegBackRight, lionHeadGroup, lionTailGroup;
+
+        let dogGroup, dogHeadGroup, dogLegFrontLeft, dogLegFrontRight, dogLegBackLeft, dogLegBackRight, dogTail;
+        let dogTime = 0, dogStuckTimer = 0;
+        let dogLastPos = new THREE.Vector3();
+        const FOLLOW_DISTANCE = 1.4;
+        const STOP_DISTANCE = 1.0;
+        const RUN_DISTANCE = 4.0;
+        const SIDE_OFFSET = 0.9;
+        const DOG_SPEED_WALK = 2.2;
+        const DOG_SPEED_RUN = 4.5;
+        const DOG_TURN_SPEED = 6.0;
+        const DOG_RADIUS = 0.6;
+        let playerFacing = new THREE.Vector3(0, 0, -1);
+
+        // ============================================================
+        // SISTEMA DE BLOQUES CON INSTANCEDMESH
+        // ============================================================
+        const blockMap = new Map();
+        const blockGroup = new THREE.Group();
+        scene.add(blockGroup);
+        const blockGeometry = new THREE.BoxGeometry(1, 1, 1);
+
+        function getCoordKey(x, y, z) {
+            return `${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`;
+        }
+
+        function rebuildWorldMesh() {
+            while (blockGroup.children.length > 0) {
+                const child = blockGroup.children[0];
+                if (child.geometry) child.geometry.dispose();
+                blockGroup.remove(child);
+            }
+
+            const categorizedBlocks = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+
+            for (const [key, data] of blockMap) {
+                if (categorizedBlocks[data.type]) {
+                    categorizedBlocks[data.type].push(data);
+                }
+            }
+
+            const dummy = new THREE.Object3D();
+            for (const [typeStr, list] of Object.entries(categorizedBlocks)) {
+                if (list.length === 0) continue;
+                const type = Number(typeStr);
+                const mat = BLOCK_MATERIALS[type];
+                if (!mat) continue;
+
+                const instancedMesh = new THREE.InstancedMesh(blockGeometry, mat, list.length);
+                instancedMesh.castShadow = true;
+                instancedMesh.receiveShadow = true;
+
+                const positions = [];
+                list.forEach((data, idx) => {
+                    dummy.position.set(data.x + 0.5, data.y + 0.5, data.z + 0.5);
+                    dummy.updateMatrix();
+                    instancedMesh.setMatrixAt(idx, dummy.matrix);
+                    positions.push({ x: data.x, y: data.y, z: data.z });
+                });
+
+                instancedMesh.instanceMatrix.needsUpdate = true;
+                instancedMesh.userData.blockPositions = positions;
+                blockGroup.add(instancedMesh);
+            }
+        }
+
+        // ============================================================
+        // ISLA
+        // ============================================================
+        function isGrass(x, z) {
+            const val = (x * x) / (rx * rx) + (z * z) / (rz * rz);
+            return val <= 1.0;
+        }
+        function isBeach(x, z) {
+            const valInner = (x * x) / (rx * rx) + (z * z) / (rz * rz);
+            const rxOuter = rx + beachWidth, rzOuter = rz + beachWidth;
+            const valOuter = (x * x) / (rxOuter * rxOuter) + (z * z) / (rzOuter * rzOuter);
+            return valInner > 1.0 && valOuter <= 1.0;
+        }
+        function isInsideIslandOrBeach(x, z) {
+            return isGrass(x, z) || isBeach(x, z);
+        }
+
+        const waterGroup = new THREE.Group();
+        scene.add(waterGroup);
+        const waterSet = new Set();
+
+        function generateIslandIncremental() {
+            const keysToRemove = [];
+            for (const [key, data] of blockMap) {
+                if (data.y !== groundY) continue;
+                const x = data.x, z = data.z;
+                if (!isInsideIslandOrBeach(x, z)) keysToRemove.push(key);
+            }
+            for (const key of keysToRemove) blockMap.delete(key);
+
+            const rangeX = Math.floor(rx + beachWidth) + 15;
+            const rangeZ = Math.floor(rz + beachWidth) + 15;
+            for (let x = -rangeX; x <= rangeX; x++) {
+                for (let z = -rangeZ; z <= rangeZ; z++) {
+                    if (isInsideIslandOrBeach(x, z)) {
+                        const key = getCoordKey(x, groundY, z);
+                        if (!blockMap.has(key)) {
+                            const type = isBeach(x, z) ? 6 : 1;
+                            blockMap.set(key, { x, y: groundY, z, type });
+                        }
+                    }
+                }
+            }
+
+            rebuildWorldMesh();
+
+            const waterKeysToRemove = [];
+            for (const waterKey of waterSet) {
+                const [wx, wz] = waterKey.split(',').map(Number);
+                if (isInsideIslandOrBeach(wx, wz)) waterKeysToRemove.push(waterKey);
+            }
+            for (const waterKey of waterKeysToRemove) {
+                const [wx, wz] = waterKey.split(',').map(Number);
+                for (let i = waterGroup.children.length - 1; i >= 0; i--) {
+                    const child = waterGroup.children[i];
+                    if (Math.abs(child.position.x - wx) < 0.1 && Math.abs(child.position.z - wz) < 0.1) {
+                        waterGroup.remove(child); child.geometry.dispose(); child.material.dispose(); break;
+                    }
+                }
+                waterSet.delete(waterKey);
+            }
+            const rxOuter = rx + beachWidth, rzOuter = rz + beachWidth;
+            const waterLimitX = rxOuter + 15, waterLimitZ = rzOuter + 15;
+            for (let x = -waterLimitX; x <= waterLimitX; x++) {
+                for (let z = -waterLimitZ; z <= waterLimitZ; z++) {
+                    if (isInsideIslandOrBeach(x, z)) continue;
+                    const dist = Math.sqrt((x*x)/(rxOuter*rxOuter) + (z*z)/(rzOuter*rzOuter));
+                    if (dist < 1.6) {
+                        const waterKey = `${x},${z}`;
+                        if (!waterSet.has(waterKey)) {
+                            const geo = new THREE.BoxGeometry(1, 0.6, 1);
+                            const mat = new THREE.MeshStandardMaterial({ color: 0x4FC3F7, transparent: true, opacity: 0.65, roughness: 0.15, metalness: 0.1 });
+                            const water = new THREE.Mesh(geo, mat);
+                            water.position.set(x, 0.2, z);
+                            water.receiveShadow = true;
+                            waterGroup.add(water);
+                            waterSet.add(waterKey);
+                        }
+                    }
+                }
+            }
+        }
+
+        // ============================================================
+        // UTILIDADES DE TERRENO
+        // ============================================================
+        function isWaterAt(x, z) {
+            if (isInsideIslandOrBeach(x, z)) return false;
+            const rxOuter = rx + beachWidth, rzOuter = rz + beachWidth;
+            const dist = Math.sqrt((x*x)/(rxOuter*rxOuter) + (z*z)/(rzOuter*rzOuter));
+            return dist < 1.6;
+        }
+
+        function getTerrainHeightAt(x, z) {
+            const bx = Math.round(x), bz = Math.round(z);
+            for (let y = groundY + 20; y >= groundY - 1; y--) {
+                if (blockMap.has(`${bx},${y},${bz}`)) return y + 1;
+            }
+            return groundY;
+        }
+
+        function getExtraBlocksAt(x, z) {
+            const bx = Math.round(x), bz = Math.round(z);
+            let count = 0;
+            for (let y = groundY + 1; y <= groundY + 10; y++) {
+                if (blockMap.has(`${bx},${y},${bz}`)) count++;
+            }
+            return count;
+        }
+        function checkObstacleAhead(x, z, dirX, dirZ, distance) {
+            const checkX = x + dirX * distance, checkZ = z + dirZ * distance;
+            if (isWaterAt(checkX, checkZ)) return 'water';
+            const extraBlocks = getExtraBlocksAt(checkX, checkZ);
+            if (extraBlocks >= 2) return 'high_column';
+            if (extraBlocks === 1) return 'one_block';
+            return 'clear';
+        }
+
+        // ============================================================
+        // COLISIÓN ENTRE ANIMALES SALVAJES
+        // ============================================================
+        const ANIMALES_PARA_CHOQUES = [
+            { grupo: () => cowGroup,      radio: 1.2, dirX: () => cowDirX,      dirZ: () => cowDirZ,      setDir: (nx, nz) => { cowDirX = nx; cowDirZ = nz; },      canTurn: () => !cowIsTurning,      setTurn: () => { cowIsTurning = true; } },
+            { grupo: () => horseGroup,    radio: 1.4, dirX: () => horseDirX,    dirZ: () => horseDirZ,    setDir: (nx, nz) => { horseDirX = nx; horseDirZ = nz; },  canTurn: () => !horseIsTurning,    setTurn: () => { horseIsTurning = true; } },
+            { grupo: () => pigGroup,      radio: 1.0, dirX: () => pigDirX,      dirZ: () => pigDirZ,      setDir: (nx, nz) => { pigDirX = nx; pigDirZ = nz; },      canTurn: () => !pigIsTurning,      setTurn: () => { pigIsTurning = true; } },
+            { grupo: () => chickenGroup,  radio: 0.7, dirX: () => chickenDirX,  dirZ: () => chickenDirZ,  setDir: (nx, nz) => { chickenDirX = nx; chickenDirZ = nz; }, canTurn: () => !chickenIsTurning,  setTurn: () => { chickenIsTurning = true; } },
+            { grupo: () => tigerGroup,    radio: 1.3, dirX: () => tigerDirX,    dirZ: () => tigerDirZ,    setDir: (nx, nz) => { tigerDirX = nx; tigerDirZ = nz; },  canTurn: () => !tigerIsTurning,    setTurn: () => { tigerIsTurning = true; } },
+            { grupo: () => pandaGroup,    radio: 1.2, dirX: () => pandaDirX,    dirZ: () => pandaDirZ,    setDir: (nx, nz) => { pandaDirX = nx; pandaDirZ = nz; },  canTurn: () => !pandaIsTurning,    setTurn: () => { pandaIsTurning = true; } },
+            { grupo: () => foxGroup,      radio: 0.9, dirX: () => foxDirX,      dirZ: () => foxDirZ,      setDir: (nx, nz) => { foxDirX = nx; foxDirZ = nz; },      canTurn: () => !foxIsTurning,      setTurn: () => { foxIsTurning = true; } },
+            { grupo: () => leopardGroup,  radio: 1.2, dirX: () => leopardDirX,  dirZ: () => leopardDirZ,  setDir: (nx, nz) => { leopardDirX = nx; leopardDirZ = nz; }, canTurn: () => !leopardIsTurning,  setTurn: () => { leopardIsTurning = true; } },
+            { grupo: () => lionGroup,     radio: 1.3, dirX: () => lionDirX,     dirZ: () => lionDirZ,     setDir: (nx, nz) => { lionDirX = nx; lionDirZ = nz; },     canTurn: () => !lionIsTurning,     setTurn: () => { lionIsTurning = true; } }
+        ];
+
+        function evitarChoquesEntreAnimales() {
+            for (let i = 0; i < ANIMALES_PARA_CHOQUES.length; i++) {
+                for (let j = i + 1; j < ANIMALES_PARA_CHOQUES.length; j++) {
+                    const A = ANIMALES_PARA_CHOQUES[i];
+                    const B = ANIMALES_PARA_CHOQUES[j];
+                    const gA = A.grupo();
+                    const gB = B.grupo();
+                    if (!gA || !gB) continue;
+
+                    const dx = gB.position.x - gA.position.x;
+                    const dz = gB.position.z - gA.position.z;
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    const minDist = A.radio + B.radio;
+
+                    if (dist < minDist && dist > 0.0001) {
+                        if (A.canTurn()) {
+                            const sign = Math.random() > 0.5 ? 1 : -1;
+                            const dAx = A.dirX(), dAz = A.dirZ();
+                            const newAx = dAx * Math.cos(sign * Math.PI/2) - dAz * Math.sin(sign * Math.PI/2);
+                            const newAz = dAx * Math.sin(sign * Math.PI/2) + dAz * Math.cos(sign * Math.PI/2);
+                            A.setDir(newAx, newAz);
+                            A.setTurn();
+                        }
+                        if (B.canTurn()) {
+                            const sign = Math.random() > 0.5 ? 1 : -1;
+                            const dBx = B.dirX(), dBz = B.dirZ();
+                            const newBx = dBx * Math.cos(sign * Math.PI/2) - dBz * Math.sin(sign * Math.PI/2);
+                            const newBz = dBx * Math.sin(sign * Math.PI/2) + dBz * Math.cos(sign * Math.PI/2);
+                            B.setDir(newBx, newBz);
+                            B.setTurn();
+                        }
+                    }
+                }
+            }
+        }
+
+        // ============================================================
+        // VACA
+        // ============================================================
+        function createCowTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f5f5f0'; ctx.fillRect(0, 0, 64, 64);
+            ctx.fillStyle = '#222222';
+            ctx.fillRect(28, 10, 16, 8); ctx.fillRect(30, 18, 12, 6); ctx.fillRect(8, 12, 14, 8); ctx.fillRect(6, 20, 12, 6);
+            ctx.fillRect(40, 28, 10, 8); ctx.fillRect(42, 36, 8, 6); ctx.fillRect(52, 20, 8, 16); ctx.fillRect(50, 36, 10, 8);
+            ctx.fillRect(4, 28, 8, 14); ctx.fillRect(6, 42, 10, 8); ctx.fillRect(20, 8, 12, 6); ctx.fillRect(22, 14, 8, 4);
+            ctx.fillRect(16, 48, 12, 6); ctx.fillRect(14, 54, 10, 4);
+            const texture = new THREE.CanvasTexture(canvas); texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; return texture;
+        }
+        function createHeadTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f5f5f0'; ctx.fillRect(0, 0, 32, 32);
+            ctx.fillStyle = '#222222'; ctx.fillRect(4, 4, 8, 6); ctx.fillRect(20, 6, 6, 4);
+            const texture = new THREE.CanvasTexture(canvas); texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; return texture;
+        }
+        const bodyTexture = createCowTexture();
+        const bodyMat = new THREE.MeshStandardMaterial({ map: bodyTexture, roughness: 0.7 });
+        const headTexture = createHeadTexture();
+        const headMat = new THREE.MeshStandardMaterial({ map: headTexture, roughness: 0.7 });
+        const blackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+        const pinkMat = new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.7 });
+        const udderMat = new THREE.MeshStandardMaterial({ color: 0xff99aa, roughness: 0.7 });
+        const nippleMat = new THREE.MeshStandardMaterial({ color: 0xd87093, roughness: 0.8 });
+        const hornMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.2 });
+        const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+        const pupilMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+        const hoofMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.9 });
+        const COW_SCALE = 0.7;
+        cowGroup = new THREE.Group();
+        const cowBodyY = 1.35 * COW_SCALE;
+        const cowBodyWidth = 1.8 * COW_SCALE;
+        const cowBodyDepth = 1.2 * COW_SCALE;
+        const cowBody = new THREE.Mesh(new THREE.BoxGeometry(cowBodyDepth, 1.2 * COW_SCALE, cowBodyWidth), bodyMat);
+        cowBody.position.set(0, cowBodyY, 0); cowBody.castShadow = true; cowBody.receiveShadow = true; cowGroup.add(cowBody);
+        const udderGroup = new THREE.Group();
+        const udderBase = new THREE.Mesh(new THREE.BoxGeometry(0.55 * COW_SCALE, 0.15 * COW_SCALE, 0.45 * COW_SCALE), udderMat); udderBase.castShadow = true; udderGroup.add(udderBase);
+        const nipple1 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.06 * COW_SCALE, 0.08 * COW_SCALE), nippleMat); nipple1.position.set(0.18 * COW_SCALE, -0.1 * COW_SCALE, 0.12 * COW_SCALE); udderGroup.add(nipple1);
+        const nipple2 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.06 * COW_SCALE, 0.08 * COW_SCALE), nippleMat); nipple2.position.set(0.18 * COW_SCALE, -0.1 * COW_SCALE, -0.12 * COW_SCALE); udderGroup.add(nipple2);
+        const nipple3 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.06 * COW_SCALE, 0.08 * COW_SCALE), nippleMat); nipple3.position.set(-0.18 * COW_SCALE, -0.1 * COW_SCALE, 0.12 * COW_SCALE); udderGroup.add(nipple3);
+        const nipple4 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.06 * COW_SCALE, 0.08 * COW_SCALE), nippleMat); nipple4.position.set(-0.18 * COW_SCALE, -0.1 * COW_SCALE, -0.12 * COW_SCALE); udderGroup.add(nipple4);
+        udderGroup.position.set(0, cowBodyY - 0.6 * COW_SCALE - 0.075 * COW_SCALE, -0.35 * COW_SCALE); cowGroup.add(udderGroup);
+        cowHeadGroup = new THREE.Group(); cowHeadGroup.position.set(0, cowBodyY + 0.35 * COW_SCALE, 1.15 * COW_SCALE);
+        const cowHead = new THREE.Mesh(new THREE.BoxGeometry(0.8 * COW_SCALE, 0.7 * COW_SCALE, 0.8 * COW_SCALE), headMat); cowHead.castShadow = true; cowHead.receiveShadow = true; cowHeadGroup.add(cowHead);
+        const cowSnout = new THREE.Mesh(new THREE.BoxGeometry(0.4 * COW_SCALE, 0.3 * COW_SCALE, 0.3 * COW_SCALE), pinkMat); cowSnout.position.set(0, -0.05 * COW_SCALE, 0.42 * COW_SCALE); cowSnout.castShadow = true; cowHeadGroup.add(cowSnout);
+        const noseMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        const nose1 = new THREE.Mesh(new THREE.BoxGeometry(0.06 * COW_SCALE, 0.08 * COW_SCALE, 0.08 * COW_SCALE), noseMat); nose1.position.set(0.12 * COW_SCALE, -0.05 * COW_SCALE, 0.58 * COW_SCALE); cowHeadGroup.add(nose1);
+        const nose2 = new THREE.Mesh(new THREE.BoxGeometry(0.06 * COW_SCALE, 0.08 * COW_SCALE, 0.08 * COW_SCALE), noseMat); nose2.position.set(-0.12 * COW_SCALE, -0.05 * COW_SCALE, 0.58 * COW_SCALE); cowHeadGroup.add(nose2);
+        const cowEye1 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.15 * COW_SCALE, 0.15 * COW_SCALE), eyeMat); cowEye1.position.set(0.42 * COW_SCALE, 0.2 * COW_SCALE, 0.2 * COW_SCALE); cowHeadGroup.add(cowEye1);
+        const cowEye2 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.15 * COW_SCALE, 0.15 * COW_SCALE), eyeMat); cowEye2.position.set(-0.42 * COW_SCALE, 0.2 * COW_SCALE, 0.2 * COW_SCALE); cowHeadGroup.add(cowEye2);
+        const cowPupil1 = new THREE.Mesh(new THREE.BoxGeometry(0.1 * COW_SCALE, 0.08 * COW_SCALE, 0.08 * COW_SCALE), pupilMat); cowPupil1.position.set(0.46 * COW_SCALE, 0.2 * COW_SCALE, 0.32 * COW_SCALE); cowHeadGroup.add(cowPupil1);
+        const cowPupil2 = new THREE.Mesh(new THREE.BoxGeometry(0.1 * COW_SCALE, 0.08 * COW_SCALE, 0.08 * COW_SCALE), pupilMat); cowPupil2.position.set(-0.46 * COW_SCALE, 0.2 * COW_SCALE, 0.32 * COW_SCALE); cowHeadGroup.add(cowPupil2);
+        const cowHorn1 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.25 * COW_SCALE, 0.08 * COW_SCALE), hornMat); cowHorn1.rotation.x = 0.4; cowHorn1.position.set(0.3 * COW_SCALE, 0.5 * COW_SCALE, 0.0); cowHeadGroup.add(cowHorn1);
+        const cowHorn2 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.25 * COW_SCALE, 0.08 * COW_SCALE), hornMat); cowHorn2.rotation.x = 0.4; cowHorn2.position.set(-0.3 * COW_SCALE, 0.5 * COW_SCALE, 0.0); cowHeadGroup.add(cowHorn2);
+        const cowEarMat = new THREE.MeshStandardMaterial({ color: 0xffb6c1, roughness: 0.7 });
+        const cowEar1 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.25 * COW_SCALE, 0.15 * COW_SCALE), cowEarMat); cowEar1.position.set(0.5 * COW_SCALE, 0.35 * COW_SCALE, -0.1 * COW_SCALE); cowHeadGroup.add(cowEar1);
+        const cowEar2 = new THREE.Mesh(new THREE.BoxGeometry(0.08 * COW_SCALE, 0.25 * COW_SCALE, 0.15 * COW_SCALE), cowEarMat); cowEar2.position.set(-0.5 * COW_SCALE, 0.35 * COW_SCALE, -0.1 * COW_SCALE); cowHeadGroup.add(cowEar2);
+        cowGroup.add(cowHeadGroup);
+        function createCowLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.25 * COW_SCALE, 0.9 * COW_SCALE, 0.25 * COW_SCALE), new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 }));
+            leg.position.y = -0.45 * COW_SCALE; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            const hoof = new THREE.Mesh(new THREE.BoxGeometry(0.27 * COW_SCALE, 0.1 * COW_SCALE, 0.27 * COW_SCALE), hoofMat); hoof.position.y = -0.95 * COW_SCALE; hoof.castShadow = true; group.add(hoof);
+            group.position.set(x, cowBodyY - 0.6 * COW_SCALE, z); return group;
+        }
+        cowLegFrontLeft = createCowLeg(0.35 * COW_SCALE, 0.5 * COW_SCALE);
+        cowLegFrontRight = createCowLeg(-0.35 * COW_SCALE, 0.5 * COW_SCALE);
+        cowLegBackLeft = createCowLeg(0.35 * COW_SCALE, -0.5 * COW_SCALE);
+        cowLegBackRight = createCowLeg(-0.35 * COW_SCALE, -0.5 * COW_SCALE);
+        cowGroup.add(cowLegFrontLeft); cowGroup.add(cowLegFrontRight); cowGroup.add(cowLegBackLeft); cowGroup.add(cowLegBackRight);
+        cowTailGroup = new THREE.Group(); cowTailGroup.position.set(0, cowBodyY, -0.95 * COW_SCALE);
+        const cowTail1 = new THREE.Mesh(new THREE.BoxGeometry(0.06 * COW_SCALE, 0.3 * COW_SCALE, 0.06 * COW_SCALE), new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 })); cowTail1.position.set(0, -0.1 * COW_SCALE, -0.15 * COW_SCALE); cowTail1.castShadow = true; cowTailGroup.add(cowTail1);
+        const cowTail2 = new THREE.Mesh(new THREE.BoxGeometry(0.06 * COW_SCALE, 0.25 * COW_SCALE, 0.06 * COW_SCALE), new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 })); cowTail2.position.set(0, -0.3 * COW_SCALE, -0.35 * COW_SCALE); cowTail2.castShadow = true; cowTailGroup.add(cowTail2);
+        const cowTuft = new THREE.Mesh(new THREE.BoxGeometry(0.15 * COW_SCALE, 0.15 * COW_SCALE, 0.15 * COW_SCALE), blackMat); cowTuft.position.set(0, -0.45 * COW_SCALE, -0.5 * COW_SCALE); cowTuft.castShadow = true; cowTailGroup.add(cowTuft);
+        cowGroup.add(cowTailGroup);
+        cowGroup.position.set(-8, 0.0, 5); scene.add(cowGroup);
+
+        // ============================================================
+        // CABALLO
+        // ============================================================
+        const horseMat = new THREE.MeshStandardMaterial({ color: 0x8C5830, roughness: 0.7, flatShading: true });
+        const maneMat = new THREE.MeshStandardMaterial({ color: 0x24150B, roughness: 0.9, flatShading: true });
+        const horseHoofMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.5, flatShading: true });
+        const snoutMat = new THREE.MeshStandardMaterial({ color: 0x6E4221, roughness: 0.8, flatShading: true });
+        const eyeBaseGreenMat = new THREE.MeshStandardMaterial({ color: 0x32CD32, roughness: 0.1, flatShading: true });
+        const pupilBlackMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.1, flatShading: true });
+        const HORSE_SCALE = 0.85;
+        horseGroup = new THREE.Group();
+        const horseBodyY = 1.15 * HORSE_SCALE;
+        const horseBodyMesh = new THREE.Mesh(new THREE.BoxGeometry(2.0 * HORSE_SCALE, 0.8 * HORSE_SCALE, 0.7 * HORSE_SCALE), horseMat); horseBodyMesh.position.set(0, horseBodyY, 0); horseBodyMesh.castShadow = true; horseBodyMesh.receiveShadow = true; horseGroup.add(horseBodyMesh);
+        horseNeckGroup = new THREE.Group(); horseNeckGroup.position.set(0.7 * HORSE_SCALE, horseBodyY + 0.35 * HORSE_SCALE, 0); horseNeckGroup.rotation.z = -0.35;
+        const horseNeck = new THREE.Mesh(new THREE.BoxGeometry(0.5 * HORSE_SCALE, 0.9 * HORSE_SCALE, 0.45 * HORSE_SCALE), horseMat); horseNeck.position.set(0, 0.3 * HORSE_SCALE, 0); horseNeck.castShadow = true; horseNeckGroup.add(horseNeck);
+        const horseManeTop = new THREE.Mesh(new THREE.BoxGeometry(0.18 * HORSE_SCALE, 0.85 * HORSE_SCALE, 0.15 * HORSE_SCALE), maneMat); horseManeTop.position.set(-0.2 * HORSE_SCALE, 0.35 * HORSE_SCALE, 0); horseNeckGroup.add(horseManeTop);
+        const horseHeadGroup = new THREE.Group(); horseHeadGroup.position.set(0.1 * HORSE_SCALE, 0.75 * HORSE_SCALE, 0);
+        const horseHeadBase = new THREE.Mesh(new THREE.BoxGeometry(0.5 * HORSE_SCALE, 0.45 * HORSE_SCALE, 0.45 * HORSE_SCALE), horseMat); horseHeadBase.castShadow = true; horseHeadGroup.add(horseHeadBase);
+        const horseSnoutMesh = new THREE.Mesh(new THREE.BoxGeometry(0.65 * HORSE_SCALE, 0.35 * HORSE_SCALE, 0.38 * HORSE_SCALE), snoutMat); horseSnoutMesh.position.set(0.45 * HORSE_SCALE, -0.05 * HORSE_SCALE, 0); horseHeadGroup.add(horseSnoutMesh);
+        const horseEyeBaseY = 0.08 * HORSE_SCALE, horseEyeBaseZ = 0.24 * HORSE_SCALE, horseEyeBaseX = 0.12 * HORSE_SCALE;
+        const horseEyeRightBase = new THREE.Mesh(new THREE.BoxGeometry(0.05 * HORSE_SCALE, 0.11 * HORSE_SCALE, 0.12 * HORSE_SCALE), eyeBaseGreenMat); horseEyeRightBase.position.set(horseEyeBaseX, horseEyeBaseY, horseEyeBaseZ); horseHeadGroup.add(horseEyeRightBase);
+        const horsePupilRight = new THREE.Mesh(new THREE.BoxGeometry(0.015 * HORSE_SCALE, 0.07 * HORSE_SCALE, 0.06 * HORSE_SCALE), pupilBlackMat); horsePupilRight.position.set(horseEyeBaseX + 0.02 * HORSE_SCALE, horseEyeBaseY, horseEyeBaseZ); horseHeadGroup.add(horsePupilRight);
+        const horseEyeLeftBase = new THREE.Mesh(new THREE.BoxGeometry(0.05 * HORSE_SCALE, 0.11 * HORSE_SCALE, 0.12 * HORSE_SCALE), eyeBaseGreenMat); horseEyeLeftBase.position.set(horseEyeBaseX, horseEyeBaseY, -horseEyeBaseZ); horseHeadGroup.add(horseEyeLeftBase);
+        const horsePupilLeft = new THREE.Mesh(new THREE.BoxGeometry(0.015 * HORSE_SCALE, 0.07 * HORSE_SCALE, 0.06 * HORSE_SCALE), pupilBlackMat); horsePupilLeft.position.set(horseEyeBaseX + 0.02 * HORSE_SCALE, horseEyeBaseY, -horseEyeBaseZ); horseHeadGroup.add(horsePupilLeft);
+        const horseEarRight = new THREE.Mesh(new THREE.BoxGeometry(0.12 * HORSE_SCALE, 0.3 * HORSE_SCALE, 0.12 * HORSE_SCALE), horseMat); horseEarRight.position.set(-0.1 * HORSE_SCALE, 0.35 * HORSE_SCALE, 0.15 * HORSE_SCALE); horseEarRight.rotation.z = -0.1; horseHeadGroup.add(horseEarRight);
+        const horseEarLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12 * HORSE_SCALE, 0.3 * HORSE_SCALE, 0.12 * HORSE_SCALE), horseMat); horseEarLeft.position.set(-0.1 * HORSE_SCALE, 0.35 * HORSE_SCALE, -0.15 * HORSE_SCALE); horseEarLeft.rotation.z = -0.1; horseHeadGroup.add(horseEarLeft);
+        horseNeckGroup.add(horseHeadGroup); horseGroup.add(horseNeckGroup);
+        function createHorseLeg(x, z) {
+            const group = new THREE.Group();
+            const upperLeg = new THREE.Mesh(new THREE.BoxGeometry(0.28 * HORSE_SCALE, 0.55 * HORSE_SCALE, 0.28 * HORSE_SCALE), horseMat); upperLeg.position.y = -0.275 * HORSE_SCALE; upperLeg.castShadow = true; upperLeg.receiveShadow = true; group.add(upperLeg);
+            const hoof = new THREE.Mesh(new THREE.BoxGeometry(0.28 * HORSE_SCALE, 0.25 * HORSE_SCALE, 0.28 * HORSE_SCALE), horseHoofMat); hoof.position.y = -0.675 * HORSE_SCALE; hoof.castShadow = true; group.add(hoof);
+            group.position.set(x, horseBodyY - 0.4 * HORSE_SCALE, z); return group;
+        }
+        hLegFrontLeft = createHorseLeg(0.65 * HORSE_SCALE, 0.22 * HORSE_SCALE);
+        hLegFrontRight = createHorseLeg(0.65 * HORSE_SCALE, -0.22 * HORSE_SCALE);
+        hLegBackLeft = createHorseLeg(-0.65 * HORSE_SCALE, 0.22 * HORSE_SCALE);
+        hLegBackRight = createHorseLeg(-0.65 * HORSE_SCALE, -0.22 * HORSE_SCALE);
+        horseGroup.add(hLegFrontLeft); horseGroup.add(hLegFrontRight); horseGroup.add(hLegBackLeft); horseGroup.add(hLegBackRight);
+        horseTailGroup = new THREE.Group(); horseTailGroup.position.set(-1.0 * HORSE_SCALE, horseBodyY + 0.2 * HORSE_SCALE, 0); horseTailGroup.rotation.z = -0.4;
+        const horseTailMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22 * HORSE_SCALE, 1.2 * HORSE_SCALE, 0.22 * HORSE_SCALE), maneMat); horseTailMesh.position.set(0.1 * HORSE_SCALE, -0.5 * HORSE_SCALE, 0); horseTailMesh.castShadow = true; horseTailGroup.add(horseTailMesh);
+        horseGroup.add(horseTailGroup);
+        horseGroup.position.set(8, 0.0, -5); scene.add(horseGroup);
+
+        // ============================================================
+        // CERDO
+        // ============================================================
+        function createPigTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ff9eb5'; ctx.fillRect(0, 0, 64, 64);
+            for (let i = 0; i < 64; i += 2) for (let j = 0; j < 64; j += 2) if (Math.random() > 0.6) { const shade = Math.floor(Math.random() * 20) - 10; ctx.fillStyle = `rgb(${255 + shade}, ${158 + shade}, ${181 + shade})`; ctx.fillRect(i, j, 2, 2); }
+            const texture = new THREE.CanvasTexture(canvas); texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; return texture;
+        }
+        const pigMat = new THREE.MeshStandardMaterial({ map: createPigTexture(), roughness: 0.7 });
+        const pigDarkPinkMat = new THREE.MeshStandardMaterial({ color: 0xff8fa3, roughness: 0.7 });
+        const pigSnoutMat = new THREE.MeshStandardMaterial({ color: 0xff758c, roughness: 0.7 });
+        const pigNostrilMat = new THREE.MeshStandardMaterial({ color: 0xb5455a, roughness: 0.8 });
+        const pigEyeMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+        const PIG_SCALE = 0.7;
+        pigGroup = new THREE.Group();
+        const pigBodyY = 0.8;
+        const pigBody = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 0.9), pigMat); pigBody.position.set(0, pigBodyY, 0); pigBody.castShadow = true; pigBody.receiveShadow = true; pigGroup.add(pigBody);
+        pigHeadGroup = new THREE.Group(); pigHeadGroup.position.set(0.85, pigBodyY + 0.05, 0);
+        const pigHead = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.6), pigMat); pigHead.castShadow = true; pigHead.receiveShadow = true; pigHeadGroup.add(pigHead);
+        const pigSnout = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.35), pigSnoutMat); pigSnout.position.set(0.32, -0.05, 0); pigSnout.castShadow = true; pigHeadGroup.add(pigSnout);
+        const pigNostril1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.05), pigNostrilMat); pigNostril1.position.set(0.46, -0.05, 0.08); pigHeadGroup.add(pigNostril1);
+        const pigNostril2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.05), pigNostrilMat); pigNostril2.position.set(0.46, -0.05, -0.08); pigHeadGroup.add(pigNostril2);
+        const pigEye1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.05), pigEyeMat); pigEye1.position.set(0.15, 0.1, 0.32); pigHeadGroup.add(pigEye1);
+        const pigEye2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.05), pigEyeMat); pigEye2.position.set(0.15, 0.1, -0.32); pigHeadGroup.add(pigEye2);
+        const pigEar1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.08), pigDarkPinkMat); pigEar1.position.set(-0.1, 0.3, 0.32); pigEar1.rotation.z = -0.2; pigHeadGroup.add(pigEar1);
+        const pigEar2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.08), pigDarkPinkMat); pigEar2.position.set(-0.1, 0.3, -0.32); pigEar2.rotation.z = -0.2; pigHeadGroup.add(pigEar2);
+        pigGroup.add(pigHeadGroup);
+        function createPigLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.45, 0.22), pigMat); leg.position.y = -0.225; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            group.position.set(x, pigBodyY - 0.4, z); return group;
+        }
+        pigLegFrontLeft = createPigLeg(0.4, 0.3);
+        pigLegFrontRight = createPigLeg(0.4, -0.3);
+        pigLegBackLeft = createPigLeg(-0.4, 0.3);
+        pigLegBackRight = createPigLeg(-0.4, -0.3);
+        pigGroup.add(pigLegFrontLeft); pigGroup.add(pigLegFrontRight); pigGroup.add(pigLegBackLeft); pigGroup.add(pigLegBackRight);
+        pigTailGroup = new THREE.Group(); pigTailGroup.position.set(-0.75, pigBodyY + 0.1, 0);
+        const pigTailPart1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), pigMat); pigTailPart1.position.set(-0.05, 0, 0); pigTailGroup.add(pigTailPart1);
+        const pigTailPart2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.06), pigMat); pigTailPart2.position.set(-0.08, 0.06, 0); pigTailGroup.add(pigTailPart2);
+        const pigTailPart3 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), pigMat); pigTailPart3.position.set(-0.05, 0.12, 0); pigTailGroup.add(pigTailPart3);
+        pigGroup.add(pigTailGroup);
+        pigGroup.position.set(0, 0.0, -8); scene.add(pigGroup);
+
+        // ============================================================
+        // GALLINA
+        // ============================================================
+        const chickenWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 });
+        const chickenRedMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.6 });
+        const chickenYellowMat = new THREE.MeshStandardMaterial({ color: 0xf39c12, roughness: 0.6 });
+        const chickenBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+        const CHICKEN_SCALE = 0.7;
+        chickenGroup = new THREE.Group();
+        const chickenBodyY = 0.6;
+        const chickenBody = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.8), chickenWhiteMat); chickenBody.position.set(0, chickenBodyY, 0); chickenBody.castShadow = true; chickenBody.receiveShadow = true; chickenGroup.add(chickenBody);
+        chickenHeadGroup = new THREE.Group(); chickenHeadGroup.position.set(0.35, chickenBodyY + 0.35, 0);
+        const chickenHead = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.35), chickenWhiteMat); chickenHead.castShadow = true; chickenHead.receiveShadow = true; chickenHeadGroup.add(chickenHead);
+        const chickenBeak = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.1, 0.15), chickenYellowMat); chickenBeak.position.set(0.25, -0.05, 0); chickenBeak.castShadow = true; chickenHeadGroup.add(chickenBeak);
+        const chickenWattle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.08), chickenRedMat); chickenWattle.position.set(0.18, -0.15, 0); chickenHeadGroup.add(chickenWattle);
+        const chickenComb = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.2), chickenRedMat); chickenComb.position.set(0, 0.22, 0); chickenHeadGroup.add(chickenComb);
+        const chickenEye1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.04), chickenBlackMat); chickenEye1.position.set(0.08, 0.05, 0.19); chickenHeadGroup.add(chickenEye1);
+        const chickenEye2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.04), chickenBlackMat); chickenEye2.position.set(0.08, 0.05, -0.19); chickenHeadGroup.add(chickenEye2);
+        chickenGroup.add(chickenHeadGroup);
+        function createChickenLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.3, 0.08), chickenYellowMat); leg.position.y = -0.15; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            const foot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.18), chickenYellowMat); foot.position.set(0.05, -0.3, 0); foot.castShadow = true; group.add(foot);
+            group.position.set(x, chickenBodyY - 0.25, z); return group;
+        }
+        chickenLegLeft = createChickenLeg(0.1, 0.25);
+        chickenLegRight = createChickenLeg(0.1, -0.25);
+        chickenGroup.add(chickenLegLeft); chickenGroup.add(chickenLegRight);
+        const chickenWingLeft = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.08), chickenWhiteMat); chickenWingLeft.position.set(0, chickenBodyY, 0.39); chickenWingLeft.castShadow = true; chickenGroup.add(chickenWingLeft);
+        const chickenWingRight = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.08), chickenWhiteMat); chickenWingRight.position.set(0, chickenBodyY, -0.39); chickenWingRight.castShadow = true; chickenGroup.add(chickenWingRight);
+        chickenTailGroup = new THREE.Group(); chickenTailGroup.position.set(-0.4, chickenBodyY + 0.15, 0);
+        const chickenFeatherMain = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.45, 0.35), chickenWhiteMat); chickenFeatherMain.rotation.z = -0.45; chickenFeatherMain.position.set(-0.1, 0.15, 0); chickenFeatherMain.castShadow = true; chickenTailGroup.add(chickenFeatherMain);
+        const chickenFeatherSide1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 0.1), chickenWhiteMat); chickenFeatherSide1.rotation.z = -0.3; chickenFeatherSide1.position.set(-0.05, 0.08, 0.22); chickenFeatherSide1.castShadow = true; chickenTailGroup.add(chickenFeatherSide1);
+        const chickenFeatherSide2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 0.1), chickenWhiteMat); chickenFeatherSide2.rotation.z = -0.3; chickenFeatherSide2.position.set(-0.05, 0.08, -0.22); chickenFeatherSide2.castShadow = true; chickenTailGroup.add(chickenFeatherSide2);
+        chickenGroup.add(chickenTailGroup);
+        chickenGroup.position.set(-5, 0.0, -8); scene.add(chickenGroup);
+
+        // ============================================================
+        // TIGRE
+        // ============================================================
+        function createRealisticTigerTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ff7b00'; ctx.fillRect(0, 0, 256, 128); ctx.fillStyle = '#111111';
+            function drawStripe(x, y, width, height, angle) { ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.fillRect(-width/2, -height/2, width, height); ctx.restore(); }
+            for (let i = 20; i < 240; i += 25) { const randomOffset = (Math.random() - 0.5) * 10; ctx.fillRect(i + randomOffset, 10, 8, 35); ctx.fillRect(i + 12 + randomOffset, 65, 7, 45); drawStripe(i + 5, 55, 6, 25, 0.3); drawStripe(i + 18, 90, 6, 30, -0.2); }
+            const texture = new THREE.CanvasTexture(canvas); texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; return texture;
+        }
+        const tigerMat = new THREE.MeshStandardMaterial({ map: createRealisticTigerTexture(), roughness: 0.7 });
+        const tigerWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 });
+        const tigerBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+        const tigerEyeMat = new THREE.MeshStandardMaterial({ color: 0x33ff22, roughness: 0.1, emissive: 0x11aa00, emissiveIntensity: 0.5 });
+        const tigerPupilMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.1 });
+        const TIGER_SCALE = 0.85;
+        tigerGroup = new THREE.Group();
+        const tigerBodyY = 0.95;
+        const tigerBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.65, 0.65), tigerMat); tigerBody.position.set(0, tigerBodyY, 0); tigerBody.castShadow = true; tigerBody.receiveShadow = true; tigerGroup.add(tigerBody);
+        tigerHeadGroup = new THREE.Group(); tigerHeadGroup.position.set(1.05, tigerBodyY + 0.15, 0);
+        const tigerHead = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.6, 0.65), tigerMat); tigerHead.castShadow = true; tigerHead.receiveShadow = true; tigerHeadGroup.add(tigerHead);
+        const tigerSnout = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.38), tigerWhiteMat); tigerSnout.position.set(0.34, -0.08, 0); tigerSnout.castShadow = true; tigerHeadGroup.add(tigerSnout);
+        const tigerNose = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.12), tigerBlackMat); tigerNose.position.set(0.5, -0.04, 0); tigerHeadGroup.add(tigerNose);
+        const tigerEye1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.08), tigerEyeMat); tigerEye1.position.set(0.33, 0.1, 0.15); tigerHeadGroup.add(tigerEye1);
+        const tigerPupil1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.05, 0.03), tigerPupilMat); tigerPupil1.position.set(0.36, 0.1, 0.15); tigerHeadGroup.add(tigerPupil1);
+        const tigerEye2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.08), tigerEyeMat); tigerEye2.position.set(0.33, 0.1, -0.15); tigerHeadGroup.add(tigerEye2);
+        const tigerPupil2 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.05, 0.03), tigerPupilMat); tigerPupil2.position.set(0.36, 0.1, -0.15); tigerHeadGroup.add(tigerPupil2);
+        const tigerEar1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 0.12), tigerMat); tigerEar1.position.set(-0.08, 0.36, 0.22); tigerEar1.rotation.z = -0.2; tigerHeadGroup.add(tigerEar1);
+        const tigerEar2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 0.12), tigerMat); tigerEar2.position.set(-0.08, 0.36, -0.22); tigerEar2.rotation.z = -0.2; tigerHeadGroup.add(tigerEar2);
+        tigerGroup.add(tigerHeadGroup);
+        function createTigerLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.65, 0.22), tigerMat); leg.position.y = -0.325; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            const paw = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.24), tigerBlackMat); paw.position.y = -0.65; paw.castShadow = true; group.add(paw);
+            group.position.set(x, tigerBodyY - 0.325, z); return group;
+        }
+        tigerLegFrontLeft = createTigerLeg(0.55, 0.22);
+        tigerLegFrontRight = createTigerLeg(0.55, -0.22);
+        tigerLegBackLeft = createTigerLeg(-0.55, 0.22);
+        tigerLegBackRight = createTigerLeg(-0.55, -0.22);
+        tigerGroup.add(tigerLegFrontLeft); tigerGroup.add(tigerLegFrontRight); tigerGroup.add(tigerLegBackLeft); tigerGroup.add(tigerLegBackRight);
+        tigerTailGroup = new THREE.Group(); tigerTailGroup.position.set(-0.95, tigerBodyY + 0.05, 0);
+        const tigerTailPart1 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.14, 0.14), tigerMat); tigerTailPart1.position.set(-0.3, -0.1, 0); tigerTailPart1.rotation.z = 0.3; tigerTailPart1.castShadow = true; tigerTailGroup.add(tigerTailPart1);
+        const tigerTailPart2 = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 0.12), tigerBlackMat); tigerTailPart2.position.set(-0.75, -0.28, 0); tigerTailPart2.rotation.z = 0.6; tigerTailPart2.castShadow = true; tigerTailGroup.add(tigerTailPart2);
+        tigerGroup.add(tigerTailGroup);
+        tigerGroup.position.set(12, 0.0, -8); scene.add(tigerGroup);
+
+        // ============================================================
+        // OSO PANDA
+        // ============================================================
+        const pandaWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.8 });
+        const pandaBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+        const pandaNoseMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4 });
+        const PANDA_SCALE = 0.8;
+        pandaGroup = new THREE.Group();
+        const pandaBodyY = 0.8;
+        const pandaBody = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.95, 1.0), pandaWhiteMat); pandaBody.position.set(0, pandaBodyY, 0); pandaBody.castShadow = true; pandaBody.receiveShadow = true; pandaGroup.add(pandaBody);
+        const pandaSpot1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.97, 0.35), pandaBlackMat); pandaSpot1.position.set(0.05, pandaBodyY, -0.34); pandaSpot1.castShadow = true; pandaGroup.add(pandaSpot1);
+        const pandaSpot2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.97, 0.35), pandaBlackMat); pandaSpot2.position.set(0.05, pandaBodyY, 0.34); pandaSpot2.castShadow = true; pandaGroup.add(pandaSpot2);
+        pandaHeadGroup = new THREE.Group(); pandaHeadGroup.position.set(0.75, pandaBodyY + 0.35, 0);
+        const pandaHead = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.6, 0.6), pandaWhiteMat); pandaHead.castShadow = true; pandaHead.receiveShadow = true; pandaHeadGroup.add(pandaHead);
+        const pandaEyeY = 0.06;
+        const pandaEyeSpot1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), pandaBlackMat); pandaEyeSpot1.position.set(0.327, pandaEyeY, 0.16); pandaEyeSpot1.castShadow = true; pandaHeadGroup.add(pandaEyeSpot1);
+        const pandaEye1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.03), pandaWhiteMat); pandaEye1.position.set(0.36, pandaEyeY, 0.16); pandaHeadGroup.add(pandaEye1);
+        const pandaPupil1 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.025, 0.04), pandaBlackMat); pandaPupil1.position.set(0.375, pandaEyeY, 0.16); pandaHeadGroup.add(pandaPupil1);
+        const pandaEyeSpot2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), pandaBlackMat); pandaEyeSpot2.position.set(0.327, pandaEyeY, -0.16); pandaEyeSpot2.castShadow = true; pandaHeadGroup.add(pandaEyeSpot2);
+        const pandaEye2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.03), pandaWhiteMat); pandaEye2.position.set(0.36, pandaEyeY, -0.16); pandaHeadGroup.add(pandaEye2);
+        const pandaPupil2 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.025, 0.04), pandaBlackMat); pandaPupil2.position.set(0.375, pandaEyeY, -0.16); pandaHeadGroup.add(pandaPupil2);
+        const pandaSnout = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.15, 0.25), pandaBlackMat); pandaSnout.position.set(0.33, -0.1, 0); pandaHeadGroup.add(pandaSnout);
+        const pandaNose = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.12), pandaNoseMat); pandaNose.position.set(0.43, -0.06, 0); pandaHeadGroup.add(pandaNose);
+        const pandaEar1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.1), pandaBlackMat); pandaEar1.position.set(-0.05, 0.38, 0.22); pandaEar1.castShadow = true; pandaHeadGroup.add(pandaEar1);
+        const pandaEar2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.1), pandaBlackMat); pandaEar2.position.set(-0.05, 0.38, -0.22); pandaEar2.castShadow = true; pandaHeadGroup.add(pandaEar2);
+        pandaGroup.add(pandaHeadGroup);
+        function createPandaLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.6, 0.42), pandaBlackMat); leg.position.y = -0.3; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            group.position.set(x, pandaBodyY - 0.3, z); return group;
+        }
+        pandaLegFrontLeft = createPandaLeg(0.4, 0.28);
+        pandaLegFrontRight = createPandaLeg(0.4, -0.28);
+        pandaLegBackLeft = createPandaLeg(-0.4, 0.28);
+        pandaLegBackRight = createPandaLeg(-0.4, -0.28);
+        pandaGroup.add(pandaLegFrontLeft); pandaGroup.add(pandaLegFrontRight); pandaGroup.add(pandaLegBackLeft); pandaGroup.add(pandaLegBackRight);
+        const pandaTail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), pandaWhiteMat); pandaTail.position.set(-0.72, pandaBodyY + 0.05, 0); pandaTail.castShadow = true; pandaGroup.add(pandaTail);
+        pandaGroup.position.set(-12, 0.0, -8); scene.add(pandaGroup);
+
+        // ============================================================
+        // ZORRO
+        // ============================================================
+        const foxOrangeMat = new THREE.MeshStandardMaterial({ color: 0xD35400, roughness: 0.8 });
+        const foxWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.8 });
+        const foxBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+        const foxNoseMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4 });
+        const FOX_SCALE = 0.8;
+        foxGroup = new THREE.Group();
+        const foxBodyY = 0.6;
+        const foxBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.6), foxOrangeMat); foxBody.position.set(0, foxBodyY, 0); foxBody.castShadow = true; foxBody.receiveShadow = true; foxGroup.add(foxBody);
+        const foxBelly = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.2, 0.58), foxWhiteMat); foxBelly.position.set(0, foxBodyY - 0.2, 0); foxBelly.castShadow = true; foxGroup.add(foxBelly);
+        foxHeadGroup = new THREE.Group(); foxHeadGroup.position.set(0.65, foxBodyY + 0.25, 0);
+        const foxHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.45, 0.5), foxOrangeMat); foxHead.castShadow = true; foxHead.receiveShadow = true; foxHeadGroup.add(foxHead);
+        const foxSnout = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.2, 0.3), foxOrangeMat); foxSnout.position.set(0.35, -0.1, 0); foxHeadGroup.add(foxSnout);
+        const foxChinWhite = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.08, 0.33), foxWhiteMat); foxChinWhite.position.set(0.35, -0.18, 0); foxChinWhite.castShadow = true; foxHeadGroup.add(foxChinWhite);
+        const foxNose = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.1), foxNoseMat); foxNose.position.set(0.53, -0.05, 0); foxHeadGroup.add(foxNose);
+        const foxEyeY = 0.05;
+        const foxEye1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.04), foxBlackMat); foxEye1.position.set(0.2, foxEyeY, 0.26); foxHeadGroup.add(foxEye1);
+        const foxEye2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.04), foxBlackMat); foxEye2.position.set(0.2, foxEyeY, -0.26); foxHeadGroup.add(foxEye2);
+        const foxEar1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.25, 0.12), foxBlackMat); foxEar1.position.set(-0.1, 0.35, 0.16); foxEar1.rotation.z = -0.2; foxEar1.castShadow = true; foxHeadGroup.add(foxEar1);
+        const foxEar2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.25, 0.12), foxBlackMat); foxEar2.position.set(-0.1, 0.35, -0.16); foxEar2.rotation.z = -0.2; foxEar2.castShadow = true; foxHeadGroup.add(foxEar2);
+        foxGroup.add(foxHeadGroup);
+        function createFoxLeg(x, z) {
+            const group = new THREE.Group();
+            const upperLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.25, 0.22), foxOrangeMat); upperLeg.position.y = -0.125; upperLeg.castShadow = true; group.add(upperLeg);
+            const lowerLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.2), foxBlackMat); lowerLeg.position.y = -0.35; lowerLeg.castShadow = true; lowerLeg.receiveShadow = true; group.add(lowerLeg);
+            group.position.set(x, foxBodyY - 0.3, z); return group;
+        }
+        foxLegFrontLeft = createFoxLeg(0.35, 0.18);
+        foxLegFrontRight = createFoxLeg(0.35, -0.18);
+        foxLegBackLeft = createFoxLeg(-0.35, 0.18);
+        foxLegBackRight = createFoxLeg(-0.35, -0.18);
+        foxGroup.add(foxLegFrontLeft); foxGroup.add(foxLegFrontRight); foxGroup.add(foxLegBackLeft); foxGroup.add(foxLegBackRight);
+        foxTailGroup = new THREE.Group(); foxTailGroup.position.set(-0.6, foxBodyY + 0.1, 0);
+        const foxTailBase = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.35), foxOrangeMat); foxTailBase.position.set(-0.2, 0, 0); foxTailBase.rotation.z = 0.4; foxTailBase.castShadow = true; foxTailGroup.add(foxTailBase);
+        const foxTailTip = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.3), foxWhiteMat); foxTailTip.position.set(-0.5, -0.12, 0); foxTailTip.rotation.z = 0.4; foxTailTip.castShadow = true; foxTailGroup.add(foxTailTip);
+        foxGroup.add(foxTailGroup);
+        foxGroup.position.set(15, 0.0, 5); scene.add(foxGroup);
+
+        // ============================================================
+        // LEOPARDO
+        // ============================================================
+        function createLeopardTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#F1C40F'; ctx.fillRect(0, 0, 256, 256); ctx.fillStyle = '#111111';
+            for (let i = 0; i < 160; i++) { ctx.beginPath(); ctx.arc(Math.random() * 256, Math.random() * 256, Math.random() * 6 + 3, 0, Math.PI * 2); ctx.fill(); if (Math.random() > 0.5) { ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(Math.random() * 256, Math.random() * 256, Math.random() * 3 + 1, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#111111'; } }
+            const texture = new THREE.CanvasTexture(canvas); texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; return texture;
+        }
+        const leopardMat = new THREE.MeshStandardMaterial({ map: createLeopardTexture(), roughness: 0.7 });
+        const leopardWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.8, flatShading: true });
+        const leopardNoseMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4, flatShading: true });
+        const leopardEyeBaseGreenMat = new THREE.MeshStandardMaterial({ color: 0x32CD32, roughness: 0.1, flatShading: true });
+        const leopardPupilBlackMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.1, flatShading: true });
+        const LEOPARD_SCALE = 0.85;
+        leopardGroup = new THREE.Group();
+        const leopardBodyY = 0.95;
+        const leopardBody = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.65, 0.6), leopardMat); leopardBody.position.set(0, leopardBodyY, 0); leopardBody.castShadow = true; leopardBody.receiveShadow = true; leopardGroup.add(leopardBody);
+        const leopardBelly = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.25, 0.58), leopardWhiteMat); leopardBelly.position.set(0, leopardBodyY - 0.22, 0); leopardGroup.add(leopardBelly);
+        leopardHeadGroup = new THREE.Group(); leopardHeadGroup.position.set(0.95, leopardBodyY + 0.2, 0);
+        const leopardHeadBase = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.55), leopardMat); leopardHeadBase.castShadow = true; leopardHeadGroup.add(leopardHeadBase);
+        const leopardSnout = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.38), leopardMat); leopardSnout.position.set(0.3, -0.1, 0); leopardHeadGroup.add(leopardSnout);
+        const leopardNose = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.14), leopardNoseMat); leopardNose.position.set(0.48, -0.06, 0); leopardHeadGroup.add(leopardNose);
+        const leopardEyeRightBase = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.11, 0.12), leopardEyeBaseGreenMat); leopardEyeRightBase.position.set(0.29, 0.08, 0.18); leopardHeadGroup.add(leopardEyeRightBase);
+        const leopardPupilRight = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.07, 0.06), leopardPupilBlackMat); leopardPupilRight.position.set(0.305, 0.08, 0.18); leopardHeadGroup.add(leopardPupilRight);
+        const leopardEyeLeftBase = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.11, 0.12), leopardEyeBaseGreenMat); leopardEyeLeftBase.position.set(0.29, 0.08, -0.18); leopardHeadGroup.add(leopardEyeLeftBase);
+        const leopardPupilLeft = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.07, 0.06), leopardPupilBlackMat); leopardPupilLeft.position.set(0.305, 0.08, -0.18); leopardHeadGroup.add(leopardPupilLeft);
+        const leopardEarRight = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), leopardMat); leopardEarRight.position.set(-0.15, 0.24, 0.22); leopardHeadGroup.add(leopardEarRight);
+        const leopardEarLeft = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), leopardMat); leopardEarLeft.position.set(-0.15, 0.24, -0.22); leopardHeadGroup.add(leopardEarLeft);
+        leopardGroup.add(leopardHeadGroup);
+        function createLeopardLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.65, 0.24), leopardMat); leg.position.y = -0.325; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            group.position.set(x, leopardBodyY - 0.325, z); return group;
+        }
+        leopardLegFrontLeft = createLeopardLeg(0.5, 0.18);
+        leopardLegFrontRight = createLeopardLeg(0.5, -0.18);
+        leopardLegBackLeft = createLeopardLeg(-0.5, 0.18);
+        leopardLegBackRight = createLeopardLeg(-0.5, -0.18);
+        leopardGroup.add(leopardLegFrontLeft); leopardGroup.add(leopardLegFrontRight); leopardGroup.add(leopardLegBackLeft); leopardGroup.add(leopardLegBackRight);
+        leopardTailGroup = new THREE.Group(); leopardTailGroup.position.set(-0.85, leopardBodyY + 0.05, 0);
+        const leopardTail = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.14, 0.14), leopardMat); leopardTail.position.set(-0.4, -0.1, 0); leopardTail.rotation.z = 0.6; leopardTail.castShadow = true; leopardTailGroup.add(leopardTail);
+        const leopardTailTip = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.12), leopardNoseMat); leopardTailTip.position.set(-0.75, -0.3, 0); leopardTailTip.rotation.z = 1.0; leopardTailTip.castShadow = true; leopardTailGroup.add(leopardTailTip);
+        leopardGroup.add(leopardTailGroup);
+        leopardGroup.position.set(-15, 0.0, 5); scene.add(leopardGroup);
+
+        // ============================================================
+        // LEÓN
+        // ============================================================
+        function createLionTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#E5C158'; ctx.fillRect(0, 0, 256, 256);
+            const texture = new THREE.CanvasTexture(canvas); texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; return texture;
+        }
+        const lionMat = new THREE.MeshStandardMaterial({ map: createLionTexture(), roughness: 0.7 });
+        const lionManeMat = new THREE.MeshStandardMaterial({ color: 0x4A2E18, roughness: 0.9, flatShading: true });
+        const lionBellyMat = new THREE.MeshStandardMaterial({ color: 0xF4E8C1, roughness: 0.8, flatShading: true });
+        const lionNoseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.4, flatShading: true });
+        const lionEyeBaseGreenMat = new THREE.MeshStandardMaterial({ color: 0x32CD32, roughness: 0.1, flatShading: true });
+        const lionPupilBlackMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.1, flatShading: true });
+        const LION_SCALE = 0.9;
+        lionGroup = new THREE.Group();
+        const lionBodyY = 0.95;
+        const lionBodyMesh = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 0.65), lionMat); lionBodyMesh.position.set(0, lionBodyY, 0); lionBodyMesh.castShadow = true; lionBodyMesh.receiveShadow = true; lionGroup.add(lionBodyMesh);
+        const lionBelly = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.28, 0.63), lionBellyMat); lionBelly.position.set(0, lionBodyY - 0.24, 0); lionGroup.add(lionBelly);
+        lionHeadGroup = new THREE.Group(); lionHeadGroup.position.set(0.98, lionBodyY + 0.2, 0);
+        const lionMane = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.9, 0.9), lionManeMat); lionMane.position.set(-0.2, 0.05, 0); lionMane.castShadow = true; lionHeadGroup.add(lionMane);
+        const lionHeadBase = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.4, 0.52), lionMat); lionHeadBase.position.set(0.08, 0, 0); lionHeadBase.castShadow = true; lionHeadGroup.add(lionHeadBase);
+        const lionSnout = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.16, 0.36), lionMat); lionSnout.position.set(0.26, -0.08, 0); lionHeadGroup.add(lionSnout);
+        const lionNose = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.12), lionNoseMat); lionNose.position.set(0.39, -0.05, 0); lionHeadGroup.add(lionNose);
+        const lionEyeRightBase = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.12), lionEyeBaseGreenMat); lionEyeRightBase.position.set(0.33, 0.08, 0.18); lionHeadGroup.add(lionEyeRightBase);
+        const lionPupilRight = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.07, 0.06), lionPupilBlackMat); lionPupilRight.position.set(0.35, 0.08, 0.18); lionHeadGroup.add(lionPupilRight);
+        const lionEyeLeftBase = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.12), lionEyeBaseGreenMat); lionEyeLeftBase.position.set(0.33, 0.08, -0.18); lionHeadGroup.add(lionEyeLeftBase);
+        const lionPupilLeft = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.07, 0.06), lionPupilBlackMat); lionPupilLeft.position.set(0.35, 0.08, -0.18); lionHeadGroup.add(lionPupilLeft);
+        const lionEarRight = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), lionManeMat); lionEarRight.position.set(-0.3, 0.45, 0.32); lionHeadGroup.add(lionEarRight);
+        const lionEarLeft = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), lionManeMat); lionEarLeft.position.set(-0.3, 0.45, -0.32); lionHeadGroup.add(lionEarLeft);
+        lionGroup.add(lionHeadGroup);
+        function createLionLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.65, 0.28), lionMat); leg.position.y = -0.325; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            group.position.set(x, lionBodyY - 0.325, z); return group;
+        }
+        lionLegFrontLeft = createLionLeg(0.55, 0.2);
+        lionLegFrontRight = createLionLeg(0.55, -0.2);
+        lionLegBackLeft = createLionLeg(-0.55, 0.2);
+        lionLegBackRight = createLionLeg(-0.55, -0.2);
+        lionGroup.add(lionLegFrontLeft); lionGroup.add(lionLegFrontRight); lionGroup.add(lionLegBackLeft); lionGroup.add(lionLegBackRight);
+        lionTailGroup = new THREE.Group(); lionTailGroup.position.set(-0.9, lionBodyY + 0.05, 0);
+        const lionTail = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.14, 0.14), lionMat); lionTail.position.set(-0.4, -0.1, 0); lionTail.rotation.z = 0.6; lionTail.castShadow = true; lionTailGroup.add(lionTail);
+        const lionTailTip = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.22), lionNoseMat); lionTailTip.position.set(-0.8, -0.32, 0); lionTailTip.rotation.z = 1.0; lionTailTip.castShadow = true; lionTailGroup.add(lionTailTip);
+        lionGroup.add(lionTailGroup);
+        lionGroup.position.set(18, 0.0, -8); scene.add(lionGroup);
+
+        // ============================================================
+        // PERRO DÓBERMAN
+        // ============================================================
+        const chocMat = new THREE.MeshStandardMaterial({ color: 0x4A2E1B, roughness: 0.7 });
+        const dogTanMat = new THREE.MeshStandardMaterial({ color: 0xD29054, roughness: 0.7 });
+        const dogNoseMat = new THREE.MeshStandardMaterial({ color: 0x2B180E, roughness: 0.5 });
+        const dogEyeMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.2, emissive: 0x3d1c08, emissiveIntensity: 0.2 });
+        const dogPupilMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+        const DOG_SCALE = 0.8;
+        dogGroup = new THREE.Group();
+        const dogBodyY = 0.8;
+        const dogBody = new THREE.Mesh(new THREE.BoxGeometry(1.5 * DOG_SCALE, 0.55 * DOG_SCALE, 0.5 * DOG_SCALE), chocMat);
+        dogBody.position.set(0, dogBodyY, 0); dogBody.castShadow = true; dogBody.receiveShadow = true; dogGroup.add(dogBody);
+        dogHeadGroup = new THREE.Group(); dogHeadGroup.position.set(0.85 * DOG_SCALE, dogBodyY + 0.2 * DOG_SCALE, 0);
+        const dogHead = new THREE.Mesh(new THREE.BoxGeometry(0.5 * DOG_SCALE, 0.45 * DOG_SCALE, 0.45 * DOG_SCALE), chocMat); dogHead.castShadow = true; dogHead.receiveShadow = true; dogHeadGroup.add(dogHead);
+        const dogSnout = new THREE.Mesh(new THREE.BoxGeometry(0.35 * DOG_SCALE, 0.25 * DOG_SCALE, 0.32 * DOG_SCALE), chocMat); dogSnout.position.set(0.35 * DOG_SCALE, -0.05 * DOG_SCALE, 0); dogSnout.castShadow = true; dogHeadGroup.add(dogSnout);
+        const dogSnoutTan = new THREE.Mesh(new THREE.BoxGeometry(0.33 * DOG_SCALE, 0.1 * DOG_SCALE, 0.33 * DOG_SCALE), dogTanMat); dogSnoutTan.position.set(0.35 * DOG_SCALE, -0.12 * DOG_SCALE, 0); dogHeadGroup.add(dogSnoutTan);
+        const dogNose = new THREE.Mesh(new THREE.BoxGeometry(0.08 * DOG_SCALE, 0.08 * DOG_SCALE, 0.1 * DOG_SCALE), dogNoseMat); dogNose.position.set(0.53 * DOG_SCALE, -0.03 * DOG_SCALE, 0); dogHeadGroup.add(dogNose);
+        const dogDotR = new THREE.Mesh(new THREE.BoxGeometry(0.06 * DOG_SCALE, 0.06 * DOG_SCALE, 0.03 * DOG_SCALE), dogTanMat); dogDotR.position.set(0.24 * DOG_SCALE, 0.12 * DOG_SCALE, 0.14 * DOG_SCALE); dogHeadGroup.add(dogDotR);
+        const dogDotL = new THREE.Mesh(new THREE.BoxGeometry(0.06 * DOG_SCALE, 0.06 * DOG_SCALE, 0.03 * DOG_SCALE), dogTanMat); dogDotL.position.set(0.24 * DOG_SCALE, 0.12 * DOG_SCALE, -0.14 * DOG_SCALE); dogHeadGroup.add(dogDotL);
+        const dogEyeR = new THREE.Mesh(new THREE.BoxGeometry(0.05 * DOG_SCALE, 0.07 * DOG_SCALE, 0.06 * DOG_SCALE), dogEyeMat); dogEyeR.position.set(0.26 * DOG_SCALE, 0.05 * DOG_SCALE, 0.14 * DOG_SCALE); dogHeadGroup.add(dogEyeR);
+        const dogPupilR = new THREE.Mesh(new THREE.BoxGeometry(0.02 * DOG_SCALE, 0.04 * DOG_SCALE, 0.03 * DOG_SCALE), dogPupilMat); dogPupilR.position.set(0.29 * DOG_SCALE, 0.05 * DOG_SCALE, 0.14 * DOG_SCALE); dogHeadGroup.add(dogPupilR);
+        const dogEyeL = new THREE.Mesh(new THREE.BoxGeometry(0.05 * DOG_SCALE, 0.07 * DOG_SCALE, 0.06 * DOG_SCALE), dogEyeMat); dogEyeL.position.set(0.26 * DOG_SCALE, 0.05 * DOG_SCALE, -0.14 * DOG_SCALE); dogHeadGroup.add(dogEyeL);
+        const dogPupilL = new THREE.Mesh(new THREE.BoxGeometry(0.02 * DOG_SCALE, 0.04 * DOG_SCALE, 0.03 * DOG_SCALE), dogPupilMat); dogPupilL.position.set(0.29 * DOG_SCALE, 0.05 * DOG_SCALE, -0.14 * DOG_SCALE); dogHeadGroup.add(dogPupilL);
+        const dogEarGeo = new THREE.ConeGeometry(0.07 * DOG_SCALE, 0.32 * DOG_SCALE, 4);
+        const dogEarR = new THREE.Mesh(dogEarGeo, chocMat); dogEarR.position.set(-0.02 * DOG_SCALE, 0.38 * DOG_SCALE, 0.14 * DOG_SCALE); dogEarR.rotation.z = -0.2; dogEarR.rotation.y = 0.785; dogHeadGroup.add(dogEarR);
+        const dogEarL = new THREE.Mesh(dogEarGeo, chocMat); dogEarL.position.set(-0.02 * DOG_SCALE, 0.38 * DOG_SCALE, -0.14 * DOG_SCALE); dogEarL.rotation.z = 0.2; dogEarL.rotation.y = 0.785; dogHeadGroup.add(dogEarL);
+        dogGroup.add(dogHeadGroup);
+        function createDogLeg(x, z) {
+            const group = new THREE.Group();
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.18 * DOG_SCALE, 0.65 * DOG_SCALE, 0.18 * DOG_SCALE), chocMat); leg.position.y = -0.325 * DOG_SCALE; leg.castShadow = true; leg.receiveShadow = true; group.add(leg);
+            const paw = new THREE.Mesh(new THREE.BoxGeometry(0.2 * DOG_SCALE, 0.12 * DOG_SCALE, 0.22 * DOG_SCALE), dogNoseMat); paw.position.set(0.02 * DOG_SCALE, -0.63 * DOG_SCALE, 0); paw.castShadow = true; group.add(paw);
+            group.position.set(x, dogBodyY - 0.275 * DOG_SCALE, z); return group;
+        }
+        dogLegFrontLeft  = createDogLeg(0.5 * DOG_SCALE, 0.16 * DOG_SCALE);
+        dogLegFrontRight = createDogLeg(0.5 * DOG_SCALE, -0.16 * DOG_SCALE);
+        dogLegBackLeft   = createDogLeg(-0.5 * DOG_SCALE, 0.16 * DOG_SCALE);
+        dogLegBackRight  = createDogLeg(-0.5 * DOG_SCALE, -0.16 * DOG_SCALE);
+        dogGroup.add(dogLegFrontLeft, dogLegFrontRight, dogLegBackLeft, dogLegBackRight);
+        dogTail = new THREE.Mesh(new THREE.BoxGeometry(0.12 * DOG_SCALE, 0.25 * DOG_SCALE, 0.12 * DOG_SCALE), chocMat);
+        dogTail.position.set(-0.78 * DOG_SCALE, dogBodyY + 0.15 * DOG_SCALE, 0);
+        dogTail.rotation.z = -0.6;
+        dogTail.castShadow = true;
+        dogGroup.add(dogTail);
+        dogGroup.position.set(-1.5, 0, 10);
+        scene.add(dogGroup);
+
+        // ============================================================
+        // SISTEMA DE GUARDADO
+        // ============================================================
+        function saveGame() {
+            try {
+                const blockData = Array.from(blockMap.values());
+                const gameState = {
+                    version: 27, timestamp: Date.now(), rx, rz,
+                    blocks: blockData,
+                    player: { x: camera.position.x, y: camera.position.y, z: camera.position.z, rotX: camera.rotation.x, rotY: camera.rotation.y, rotZ: camera.rotation.z },
+                    cow: { x: cowGroup.position.x, y: cowGroup.position.y, z: cowGroup.position.z, dirX: cowDirX, dirZ: cowDirZ, isWalking: cowIsWalking, cycleTimer: cowCycleTimer },
+                    horse: { x: horseGroup.position.x, y: horseGroup.position.y, z: horseGroup.position.z, dirX: horseDirX, dirZ: horseDirZ, isWalking: horseIsWalking, cycleTimer: horseCycleTimer },
+                    pig: { x: pigGroup.position.x, y: pigGroup.position.y, z: pigGroup.position.z, dirX: pigDirX, dirZ: pigDirZ, isWalking: pigIsWalking, cycleTimer: pigCycleTimer },
+                    chicken: { x: chickenGroup.position.x, y: chickenGroup.position.y, z: chickenGroup.position.z, dirX: chickenDirX, dirZ: chickenDirZ, isWalking: chickenIsWalking, cycleTimer: chickenCycleTimer },
+                    tiger: { x: tigerGroup.position.x, y: tigerGroup.position.y, z: tigerGroup.position.z, dirX: tigerDirX, dirZ: tigerDirZ, isWalking: tigerIsWalking, cycleTimer: tigerCycleTimer },
+                    panda: { x: pandaGroup.position.x, y: pandaGroup.position.y, z: pandaGroup.position.z, dirX: pandaDirX, dirZ: pandaDirZ, isWalking: pandaIsWalking, cycleTimer: pandaCycleTimer },
+                    fox: { x: foxGroup.position.x, y: foxGroup.position.y, z: foxGroup.position.z, dirX: foxDirX, dirZ: foxDirZ, isWalking: foxIsWalking, cycleTimer: foxCycleTimer },
+                    leopard: { x: leopardGroup.position.x, y: leopardGroup.position.y, z: leopardGroup.position.z, dirX: leopardDirX, dirZ: leopardDirZ, isWalking: leopardIsWalking, cycleTimer: leopardCycleTimer },
+                    lion: { x: lionGroup.position.x, y: lionGroup.position.y, z: lionGroup.position.z, dirX: lionDirX, dirZ: lionDirZ, isWalking: lionIsWalking, cycleTimer: lionCycleTimer },
+                    dog: { x: dogGroup.position.x, y: dogGroup.position.y, z: dogGroup.position.z },
+                    selectedBlock
+                };
+                localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
+                return true;
+            } catch (e) { console.error('❌ Error al guardar:', e); return false; }
+        }
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem(SAVE_KEY);
+                if (!saved) { console.log('📂 No hay partida guardada, empezando nueva'); return null; }
+                const gameState = JSON.parse(saved);
+                console.log('📂 Partida cargada:', new Date(gameState.timestamp).toLocaleString());
+                return gameState;
+            } catch (e) { console.error('❌ Error al cargar:', e); return null; }
+        }
+        function clearSave() {
+            try { localStorage.removeItem(SAVE_KEY); console.log('🗑️ Partida borrada'); return true; }
+            catch (e) { console.error('❌ Error al borrar:', e); return false; }
+        }
+
+        // ============================================================
+        // CARGAR PARTIDA
+        // ============================================================
+        const savedGame = loadGame();
+        if (savedGame) {
+            if (savedGame.rx) rx = savedGame.rx;
+            if (savedGame.rz) rz = savedGame.rz;
+            generateIslandIncremental();
+            if (savedGame.blocks) {
+                blockMap.clear();
+                for (const b of savedGame.blocks) {
+                    blockMap.set(getCoordKey(b.x, b.y, b.z), b);
+                }
+                rebuildWorldMesh();
+            }
+            if (savedGame.player) {
+                camera.position.set(savedGame.player.x, savedGame.player.y, savedGame.player.z);
+                camera.rotation.x = savedGame.player.rotX || 0;
+                camera.rotation.y = savedGame.player.rotY || 0;
+                camera.rotation.z = savedGame.player.rotZ || 0;
+            }
+            if (savedGame.cow) { cowGroup.position.set(savedGame.cow.x, savedGame.cow.y, savedGame.cow.z); cowDirX = savedGame.cow.dirX; cowDirZ = savedGame.cow.dirZ; cowIsWalking = savedGame.cow.isWalking; cowCycleTimer = savedGame.cow.cycleTimer; cowGroup.rotation.y = Math.atan2(cowDirX, cowDirZ); }
+            if (savedGame.horse) { horseGroup.position.set(savedGame.horse.x, savedGame.horse.y, savedGame.horse.z); horseDirX = savedGame.horse.dirX; horseDirZ = savedGame.horse.dirZ; horseIsWalking = savedGame.horse.isWalking; horseCycleTimer = savedGame.horse.cycleTimer; horseGroup.rotation.y = Math.atan2(horseDirX, horseDirZ) - Math.PI / 2; }
+            if (savedGame.pig) { pigGroup.position.set(savedGame.pig.x, savedGame.pig.y, savedGame.pig.z); pigDirX = savedGame.pig.dirX; pigDirZ = savedGame.pig.dirZ; pigIsWalking = savedGame.pig.isWalking; pigCycleTimer = savedGame.pig.cycleTimer; pigGroup.rotation.y = Math.atan2(pigDirX, pigDirZ) - Math.PI / 2; }
+            if (savedGame.chicken) { chickenGroup.position.set(savedGame.chicken.x, savedGame.chicken.y, savedGame.chicken.z); chickenDirX = savedGame.chicken.dirX; chickenDirZ = savedGame.chicken.dirZ; chickenIsWalking = savedGame.chicken.isWalking; chickenCycleTimer = savedGame.chicken.cycleTimer; chickenGroup.rotation.y = Math.atan2(chickenDirX, chickenDirZ) - Math.PI / 2; }
+            if (savedGame.tiger) { tigerGroup.position.set(savedGame.tiger.x, savedGame.tiger.y, savedGame.tiger.z); tigerDirX = savedGame.tiger.dirX; tigerDirZ = savedGame.tiger.dirZ; tigerIsWalking = savedGame.tiger.isWalking; tigerCycleTimer = savedGame.tiger.cycleTimer; tigerGroup.rotation.y = Math.atan2(tigerDirX, tigerDirZ) - Math.PI / 2; }
+            if (savedGame.panda) { pandaGroup.position.set(savedGame.panda.x, savedGame.panda.y, savedGame.panda.z); pandaDirX = savedGame.panda.dirX; pandaDirZ = savedGame.panda.dirZ; pandaIsWalking = savedGame.panda.isWalking; pandaCycleTimer = savedGame.panda.cycleTimer; pandaGroup.rotation.y = Math.atan2(pandaDirX, pandaDirZ) - Math.PI / 2; }
+            if (savedGame.fox) { foxGroup.position.set(savedGame.fox.x, savedGame.fox.y, savedGame.fox.z); foxDirX = savedGame.fox.dirX; foxDirZ = savedGame.fox.dirZ; foxIsWalking = savedGame.fox.isWalking; foxCycleTimer = savedGame.fox.cycleTimer; foxGroup.rotation.y = Math.atan2(foxDirX, foxDirZ) - Math.PI / 2; }
+            if (savedGame.leopard) { leopardGroup.position.set(savedGame.leopard.x, savedGame.leopard.y, savedGame.leopard.z); leopardDirX = savedGame.leopard.dirX; leopardDirZ = savedGame.leopard.dirZ; leopardIsWalking = savedGame.leopard.isWalking; leopardCycleTimer = savedGame.leopard.cycleTimer; leopardGroup.rotation.y = Math.atan2(leopardDirX, leopardDirZ) - Math.PI / 2; }
+            if (savedGame.lion) { lionGroup.position.set(savedGame.lion.x, savedGame.lion.y, savedGame.lion.z); lionDirX = savedGame.lion.dirX; lionDirZ = savedGame.lion.dirZ; lionIsWalking = savedGame.lion.isWalking; lionCycleTimer = savedGame.lion.cycleTimer; lionGroup.rotation.y = Math.atan2(lionDirX, lionDirZ) - Math.PI / 2; }
+            if (savedGame.dog) { dogGroup.position.set(savedGame.dog.x, savedGame.dog.y, savedGame.dog.z); }
+            if (savedGame.selectedBlock) selectedBlock = savedGame.selectedBlock;
+            console.log('✅ Partida restaurada');
+        } else {
+            generateIslandIncremental();
+        }
+
+        // ============================================================
+        // IA DE ANIMALES SALVAJES
+        // ============================================================
+        function updateCowMovement(delta) {
+            cowCycleTimer += delta;
+            if (cowIsWalking) { if (cowCycleTimer >= WALK_DURATION) { cowIsWalking = false; cowCycleTimer = 0; } }
+            else { if (cowCycleTimer >= IDLE_DURATION) { cowIsWalking = true; cowCycleTimer = 0; } }
+            if (cowIsWalking) cowTime += delta;
+            const currentX = cowGroup.position.x, currentZ = cowGroup.position.z;
+            if (cowIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, cowDirX, cowDirZ, 0.6);
+                const o2 = checkObstacleAhead(currentX, currentZ, cowDirX, cowDirZ, 1.0);
+                const o3 = checkObstacleAhead(currentX, currentZ, cowDirX, cowDirZ, 1.4);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !cowIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = cowDirX * Math.cos(turnSign * Math.PI/2) - cowDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = cowDirX * Math.sin(turnSign * Math.PI/2) + cowDirZ * Math.cos(turnSign * Math.PI/2);
+                    cowTurnTargetX = newDirX; cowTurnTargetZ = newDirZ; cowIsTurning = true;
+                }
+            }
+            if (cowIsTurning) {
+                cowDirX += (cowTurnTargetX - cowDirX) * Math.min(1, cowTurnSpeed * delta);
+                cowDirZ += (cowTurnTargetZ - cowDirZ) * Math.min(1, cowTurnSpeed * delta);
+                const len = Math.sqrt(cowDirX * cowDirX + cowDirZ * cowDirZ);
+                if (len > 0.0001) { cowDirX /= len; cowDirZ /= len; }
+                const dot = cowDirX * cowTurnTargetX + cowDirZ * cowTurnTargetZ;
+                if (dot > 0.999) { cowDirX = cowTurnTargetX; cowDirZ = cowTurnTargetZ; cowIsTurning = false; }
+            }
+            if (cowIsWalking && !cowIsTurning) {
+                const moveSpeed = cowSpeed * delta;
+                const newX = currentX + cowDirX * moveSpeed, newZ = currentZ + cowDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { cowGroup.position.x = newX; cowGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = cowDirX * Math.cos(turnSign * Math.PI/2) - cowDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = cowDirX * Math.sin(turnSign * Math.PI/2) + cowDirZ * Math.cos(turnSign * Math.PI/2);
+                    cowTurnTargetX = newDirX; cowTurnTargetZ = newDirZ; cowIsTurning = true;
+                }
+            }
+            cowGroup.rotation.y = Math.atan2(cowDirX, cowDirZ);
+            cowGroup.position.y = getTerrainHeightAt(cowGroup.position.x, cowGroup.position.z);
+            if (cowIsWalking && !cowIsTurning) {
+                const legSpeed = 3.5, legAngle = 0.5;
+                cowLegFrontLeft.rotation.x = Math.sin(cowTime * legSpeed) * legAngle;
+                cowLegFrontRight.rotation.x = Math.sin(cowTime * legSpeed + Math.PI) * legAngle;
+                cowLegBackLeft.rotation.x = Math.sin(cowTime * legSpeed + Math.PI) * legAngle;
+                cowLegBackRight.rotation.x = Math.sin(cowTime * legSpeed) * legAngle;
+                cowGroup.position.y += Math.abs(Math.sin(cowTime * legSpeed)) * 0.03;
+            } else { cowLegFrontLeft.rotation.x = 0; cowLegFrontRight.rotation.x = 0; cowLegBackLeft.rotation.x = 0; cowLegBackRight.rotation.x = 0; }
+            if (cowIsWalking) { cowTailGroup.rotation.z = Math.sin(cowTime * 0.8) * 0.15; cowTailGroup.rotation.x = 0.1 + Math.sin(cowTime * 0.6) * 0.05; }
+            else { cowTailGroup.rotation.z *= 0.95; cowTailGroup.rotation.x *= 0.95; }
+            cowHeadGroup.rotation.z = Math.sin(cowTime * 0.5) * 0.03;
+        }
+
+        function updateHorseMovement(delta) {
+            horseCycleTimer += delta;
+            if (horseIsWalking) { if (horseCycleTimer >= WALK_DURATION) { horseIsWalking = false; horseCycleTimer = 0; } }
+            else { if (horseCycleTimer >= IDLE_DURATION) { horseIsWalking = true; horseCycleTimer = 0; } }
+            if (horseIsWalking) horseTime += delta;
+            const currentX = horseGroup.position.x, currentZ = horseGroup.position.z;
+            if (horseIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, horseDirX, horseDirZ, 0.7);
+                const o2 = checkObstacleAhead(currentX, currentZ, horseDirX, horseDirZ, 1.1);
+                const o3 = checkObstacleAhead(currentX, currentZ, horseDirX, horseDirZ, 1.5);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !horseIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = horseDirX * Math.cos(turnSign * Math.PI/2) - horseDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = horseDirX * Math.sin(turnSign * Math.PI/2) + horseDirZ * Math.cos(turnSign * Math.PI/2);
+                    horseTurnTargetX = newDirX; horseTurnTargetZ = newDirZ; horseIsTurning = true;
+                }
+            }
+            if (horseIsTurning) {
+                horseDirX += (horseTurnTargetX - horseDirX) * Math.min(1, horseTurnSpeed * delta);
+                horseDirZ += (horseTurnTargetZ - horseDirZ) * Math.min(1, horseTurnSpeed * delta);
+                const len = Math.sqrt(horseDirX * horseDirX + horseDirZ * horseDirZ);
+                if (len > 0.0001) { horseDirX /= len; horseDirZ /= len; }
+                const dot = horseDirX * horseTurnTargetX + horseDirZ * horseTurnTargetZ;
+                if (dot > 0.999) { horseDirX = horseTurnTargetX; horseDirZ = horseTurnTargetZ; horseIsTurning = false; }
+            }
+            if (horseIsWalking && !horseIsTurning) {
+                const moveSpeed = horseSpeed * delta;
+                const newX = currentX + horseDirX * moveSpeed, newZ = currentZ + horseDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { horseGroup.position.x = newX; horseGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = horseDirX * Math.cos(turnSign * Math.PI/2) - horseDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = horseDirX * Math.sin(turnSign * Math.PI/2) + horseDirZ * Math.cos(turnSign * Math.PI/2);
+                    horseTurnTargetX = newDirX; horseTurnTargetZ = newDirZ; horseIsTurning = true;
+                }
+            }
+            horseGroup.rotation.y = Math.atan2(horseDirX, horseDirZ) - Math.PI / 2;
+            horseGroup.position.y = getTerrainHeightAt(horseGroup.position.x, horseGroup.position.z);
+            if (horseIsWalking && !horseIsTurning) {
+                const legSpeed = 3.5, legAngle = 0.5;
+                hLegFrontLeft.rotation.z = Math.sin(horseTime * legSpeed) * legAngle;
+                hLegFrontRight.rotation.z = Math.sin(horseTime * legSpeed + Math.PI) * legAngle;
+                hLegBackLeft.rotation.z = Math.sin(horseTime * legSpeed + Math.PI) * legAngle;
+                hLegBackRight.rotation.z = Math.sin(horseTime * legSpeed) * legAngle;
+                horseGroup.position.y += Math.abs(Math.sin(horseTime * legSpeed)) * 0.03;
+            } else { hLegFrontLeft.rotation.z = 0; hLegFrontRight.rotation.z = 0; hLegBackLeft.rotation.z = 0; hLegBackRight.rotation.z = 0; }
+            if (horseIsWalking) horseTailGroup.rotation.z = -0.4 + Math.sin(horseTime * 0.8) * 0.15;
+            else horseTailGroup.rotation.z = -0.4;
+            horseNeckGroup.rotation.z = -0.35 + Math.sin(horseTime * 0.5) * 0.03;
+        }
+
+        function updatePigMovement(delta) {
+            pigCycleTimer += delta;
+            if (pigIsWalking) { if (pigCycleTimer >= WALK_DURATION) { pigIsWalking = false; pigCycleTimer = 0; } }
+            else { if (pigCycleTimer >= IDLE_DURATION) { pigIsWalking = true; pigCycleTimer = 0; } }
+            if (pigIsWalking) pigTime += delta;
+            const currentX = pigGroup.position.x, currentZ = pigGroup.position.z;
+            if (pigIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, pigDirX, pigDirZ, 0.6);
+                const o2 = checkObstacleAhead(currentX, currentZ, pigDirX, pigDirZ, 1.0);
+                const o3 = checkObstacleAhead(currentX, currentZ, pigDirX, pigDirZ, 1.4);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !pigIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = pigDirX * Math.cos(turnSign * Math.PI/2) - pigDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = pigDirX * Math.sin(turnSign * Math.PI/2) + pigDirZ * Math.cos(turnSign * Math.PI/2);
+                    pigTurnTargetX = newDirX; pigTurnTargetZ = newDirZ; pigIsTurning = true;
+                }
+            }
+            if (pigIsTurning) {
+                pigDirX += (pigTurnTargetX - pigDirX) * Math.min(1, pigTurnSpeed * delta);
+                pigDirZ += (pigTurnTargetZ - pigDirZ) * Math.min(1, pigTurnSpeed * delta);
+                const len = Math.sqrt(pigDirX * pigDirX + pigDirZ * pigDirZ);
+                if (len > 0.0001) { pigDirX /= len; pigDirZ /= len; }
+                const dot = pigDirX * pigTurnTargetX + pigDirZ * pigTurnTargetZ;
+                if (dot > 0.999) { pigDirX = pigTurnTargetX; pigDirZ = pigTurnTargetZ; pigIsTurning = false; }
+            }
+            if (pigIsWalking && !pigIsTurning) {
+                const moveSpeed = pigSpeed * delta;
+                const newX = currentX + pigDirX * moveSpeed, newZ = currentZ + pigDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { pigGroup.position.x = newX; pigGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = pigDirX * Math.cos(turnSign * Math.PI/2) - pigDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = pigDirX * Math.sin(turnSign * Math.PI/2) + pigDirZ * Math.cos(turnSign * Math.PI/2);
+                    pigTurnTargetX = newDirX; pigTurnTargetZ = newDirZ; pigIsTurning = true;
+                }
+            }
+            pigGroup.rotation.y = Math.atan2(pigDirX, pigDirZ) - Math.PI / 2;
+            pigGroup.position.y = getTerrainHeightAt(pigGroup.position.x, pigGroup.position.z);
+            if (pigIsWalking && !pigIsTurning) {
+                const legSpeed = 3.5, legAngle = 0.4;
+                pigLegFrontLeft.rotation.z = Math.sin(pigTime * legSpeed) * legAngle;
+                pigLegFrontRight.rotation.z = Math.sin(pigTime * legSpeed + Math.PI) * legAngle;
+                pigLegBackLeft.rotation.z = Math.sin(pigTime * legSpeed + Math.PI) * legAngle;
+                pigLegBackRight.rotation.z = Math.sin(pigTime * legSpeed) * legAngle;
+                pigGroup.position.y += Math.abs(Math.sin(pigTime * legSpeed)) * 0.025;
+            } else { pigLegFrontLeft.rotation.z = 0; pigLegFrontRight.rotation.z = 0; pigLegBackLeft.rotation.z = 0; pigLegBackRight.rotation.z = 0; }
+            if (pigIsWalking) pigTailGroup.rotation.z = Math.sin(pigTime * 2) * 0.2;
+            else pigTailGroup.rotation.z *= 0.95;
+            pigHeadGroup.rotation.z = Math.sin(pigTime * 0.5) * 0.03;
+        }
+
+        function updateChickenMovement(delta) {
+            chickenCycleTimer += delta;
+            if (chickenIsWalking) { if (chickenCycleTimer >= WALK_DURATION) { chickenIsWalking = false; chickenCycleTimer = 0; } }
+            else { if (chickenCycleTimer >= IDLE_DURATION) { chickenIsWalking = true; chickenCycleTimer = 0; } }
+            if (chickenIsWalking) chickenTime += delta;
+            const currentX = chickenGroup.position.x, currentZ = chickenGroup.position.z;
+            if (chickenIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, chickenDirX, chickenDirZ, 0.5);
+                const o2 = checkObstacleAhead(currentX, currentZ, chickenDirX, chickenDirZ, 0.9);
+                const o3 = checkObstacleAhead(currentX, currentZ, chickenDirX, chickenDirZ, 1.3);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !chickenIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = chickenDirX * Math.cos(turnSign * Math.PI/2) - chickenDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = chickenDirX * Math.sin(turnSign * Math.PI/2) + chickenDirZ * Math.cos(turnSign * Math.PI/2);
+                    chickenTurnTargetX = newDirX; chickenTurnTargetZ = newDirZ; chickenIsTurning = true;
+                }
+            }
+            if (chickenIsTurning) {
+                chickenDirX += (chickenTurnTargetX - chickenDirX) * Math.min(1, chickenTurnSpeed * delta);
+                chickenDirZ += (chickenTurnTargetZ - chickenDirZ) * Math.min(1, chickenTurnSpeed * delta);
+                const len = Math.sqrt(chickenDirX * chickenDirX + chickenDirZ * chickenDirZ);
+                if (len > 0.0001) { chickenDirX /= len; chickenDirZ /= len; }
+                const dot = chickenDirX * chickenTurnTargetX + chickenDirZ * chickenTurnTargetZ;
+                if (dot > 0.999) { chickenDirX = chickenTurnTargetX; chickenDirZ = chickenTurnTargetZ; chickenIsTurning = false; }
+            }
+            if (chickenIsWalking && !chickenIsTurning) {
+                const moveSpeed = chickenSpeed * delta;
+                const newX = currentX + chickenDirX * moveSpeed, newZ = currentZ + chickenDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { chickenGroup.position.x = newX; chickenGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = chickenDirX * Math.cos(turnSign * Math.PI/2) - chickenDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = chickenDirX * Math.sin(turnSign * Math.PI/2) + chickenDirZ * Math.cos(turnSign * Math.PI/2);
+                    chickenTurnTargetX = newDirX; chickenTurnTargetZ = newDirZ; chickenIsTurning = true;
+                }
+            }
+            chickenGroup.rotation.y = Math.atan2(chickenDirX, chickenDirZ) - Math.PI / 2;
+            chickenGroup.position.y = getTerrainHeightAt(chickenGroup.position.x, chickenGroup.position.z);
+            if (chickenIsWalking && !chickenIsTurning) {
+                const legSpeed = 4.0, legAngle = 0.4;
+                chickenLegLeft.rotation.z = Math.sin(chickenTime * legSpeed) * legAngle;
+                chickenLegRight.rotation.z = Math.sin(chickenTime * legSpeed + Math.PI) * legAngle;
+                chickenGroup.position.y += Math.abs(Math.sin(chickenTime * legSpeed)) * 0.04;
+                chickenHeadGroup.rotation.z = Math.sin(chickenTime * 2) * 0.05;
+                chickenTailGroup.rotation.x = Math.sin(chickenTime * legSpeed * 2) * 0.05;
+            } else { chickenLegLeft.rotation.z = 0; chickenLegRight.rotation.z = 0; chickenHeadGroup.rotation.z *= 0.95; chickenTailGroup.rotation.x *= 0.95; }
+        }
+
+        function updateTigerMovement(delta) {
+            tigerCycleTimer += delta;
+            if (tigerIsWalking) { if (tigerCycleTimer >= WALK_DURATION) { tigerIsWalking = false; tigerCycleTimer = 0; } }
+            else { if (tigerCycleTimer >= IDLE_DURATION) { tigerIsWalking = true; tigerCycleTimer = 0; } }
+            if (tigerIsWalking) tigerTime += delta;
+            const currentX = tigerGroup.position.x, currentZ = tigerGroup.position.z;
+            if (tigerIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, tigerDirX, tigerDirZ, 0.7);
+                const o2 = checkObstacleAhead(currentX, currentZ, tigerDirX, tigerDirZ, 1.1);
+                const o3 = checkObstacleAhead(currentX, currentZ, tigerDirX, tigerDirZ, 1.5);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !tigerIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = tigerDirX * Math.cos(turnSign * Math.PI/2) - tigerDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = tigerDirX * Math.sin(turnSign * Math.PI/2) + tigerDirZ * Math.cos(turnSign * Math.PI/2);
+                    tigerTurnTargetX = newDirX; tigerTurnTargetZ = newDirZ; tigerIsTurning = true;
+                }
+            }
+            if (tigerIsTurning) {
+                tigerDirX += (tigerTurnTargetX - tigerDirX) * Math.min(1, tigerTurnSpeed * delta);
+                tigerDirZ += (tigerTurnTargetZ - tigerDirZ) * Math.min(1, tigerTurnSpeed * delta);
+                const len = Math.sqrt(tigerDirX * tigerDirX + tigerDirZ * tigerDirZ);
+                if (len > 0.0001) { tigerDirX /= len; tigerDirZ /= len; }
+                const dot = tigerDirX * tigerTurnTargetX + tigerDirZ * tigerTurnTargetZ;
+                if (dot > 0.999) { tigerDirX = tigerTurnTargetX; tigerDirZ = tigerTurnTargetZ; tigerIsTurning = false; }
+            }
+            if (tigerIsWalking && !tigerIsTurning) {
+                const moveSpeed = tigerSpeed * delta;
+                const newX = currentX + tigerDirX * moveSpeed, newZ = currentZ + tigerDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { tigerGroup.position.x = newX; tigerGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = tigerDirX * Math.cos(turnSign * Math.PI/2) - tigerDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = tigerDirX * Math.sin(turnSign * Math.PI/2) + tigerDirZ * Math.cos(turnSign * Math.PI/2);
+                    tigerTurnTargetX = newDirX; tigerTurnTargetZ = newDirZ; tigerIsTurning = true;
+                }
+            }
+            tigerGroup.rotation.y = Math.atan2(tigerDirX, tigerDirZ) - Math.PI / 2;
+            tigerGroup.position.y = getTerrainHeightAt(tigerGroup.position.x, tigerGroup.position.z);
+            if (tigerIsWalking && !tigerIsTurning) {
+                const legSpeed = 2.8, legAngle = 0.38;
+                tigerLegFrontLeft.rotation.z = Math.sin(tigerTime * legSpeed) * legAngle;
+                tigerLegFrontRight.rotation.z = Math.sin(tigerTime * legSpeed + Math.PI) * legAngle;
+                tigerLegBackLeft.rotation.z = Math.sin(tigerTime * legSpeed + Math.PI) * legAngle;
+                tigerLegBackRight.rotation.z = Math.sin(tigerTime * legSpeed) * legAngle;
+                tigerGroup.position.y += Math.abs(Math.sin(tigerTime * legSpeed)) * 0.025;
+            } else { tigerLegFrontLeft.rotation.z = 0; tigerLegFrontRight.rotation.z = 0; tigerLegBackLeft.rotation.z = 0; tigerLegBackRight.rotation.z = 0; }
+            if (tigerIsWalking) tigerTailGroup.rotation.z = Math.sin(tigerTime * 1.5) * 0.15;
+            else tigerTailGroup.rotation.z *= 0.95;
+            tigerHeadGroup.rotation.z = Math.sin(tigerTime * 0.8) * 0.04;
+        }
+
+        function updatePandaMovement(delta) {
+            pandaCycleTimer += delta;
+            if (pandaIsWalking) { if (pandaCycleTimer >= WALK_DURATION) { pandaIsWalking = false; pandaCycleTimer = 0; } }
+            else { if (pandaCycleTimer >= IDLE_DURATION) { pandaIsWalking = true; pandaCycleTimer = 0; } }
+            if (pandaIsWalking) pandaTime += delta;
+            const currentX = pandaGroup.position.x, currentZ = pandaGroup.position.z;
+            if (pandaIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, pandaDirX, pandaDirZ, 0.6);
+                const o2 = checkObstacleAhead(currentX, currentZ, pandaDirX, pandaDirZ, 1.0);
+                const o3 = checkObstacleAhead(currentX, currentZ, pandaDirX, pandaDirZ, 1.4);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !pandaIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = pandaDirX * Math.cos(turnSign * Math.PI/2) - pandaDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = pandaDirX * Math.sin(turnSign * Math.PI/2) + pandaDirZ * Math.cos(turnSign * Math.PI/2);
+                    pandaTurnTargetX = newDirX; pandaTurnTargetZ = newDirZ; pandaIsTurning = true;
+                }
+            }
+            if (pandaIsTurning) {
+                pandaDirX += (pandaTurnTargetX - pandaDirX) * Math.min(1, pandaTurnSpeed * delta);
+                pandaDirZ += (pandaTurnTargetZ - pandaDirZ) * Math.min(1, pandaTurnSpeed * delta);
+                const len = Math.sqrt(pandaDirX * pandaDirX + pandaDirZ * pandaDirZ);
+                if (len > 0.0001) { pandaDirX /= len; pandaDirZ /= len; }
+                const dot = pandaDirX * pandaTurnTargetX + pandaDirZ * pandaTurnTargetZ;
+                if (dot > 0.999) { pandaDirX = pandaTurnTargetX; pandaDirZ = pandaTurnTargetZ; pandaIsTurning = false; }
+            }
+            if (pandaIsWalking && !pandaIsTurning) {
+                const moveSpeed = pandaSpeed * delta;
+                const newX = currentX + pandaDirX * moveSpeed, newZ = currentZ + pandaDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { pandaGroup.position.x = newX; pandaGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = pandaDirX * Math.cos(turnSign * Math.PI/2) - pandaDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = pandaDirX * Math.sin(turnSign * Math.PI/2) + pandaDirZ * Math.cos(turnSign * Math.PI/2);
+                    pandaTurnTargetX = newDirX; pandaTurnTargetZ = newDirZ; pandaIsTurning = true;
+                }
+            }
+            pandaGroup.rotation.y = Math.atan2(pandaDirX, pandaDirZ) - Math.PI / 2;
+            pandaGroup.position.y = getTerrainHeightAt(pandaGroup.position.x, pandaGroup.position.z);
+            if (pandaIsWalking && !pandaIsTurning) {
+                const legSpeed = 3.0, legAngle = 0.35;
+                pandaLegFrontLeft.rotation.z = Math.sin(pandaTime * legSpeed) * legAngle;
+                pandaLegFrontRight.rotation.z = Math.sin(pandaTime * legSpeed + Math.PI) * legAngle;
+                pandaLegBackLeft.rotation.z = Math.sin(pandaTime * legSpeed + Math.PI) * legAngle;
+                pandaLegBackRight.rotation.z = Math.sin(pandaTime * legSpeed) * legAngle;
+                pandaGroup.position.y += Math.abs(Math.sin(pandaTime * legSpeed)) * 0.025;
+            } else { pandaLegFrontLeft.rotation.z = 0; pandaLegFrontRight.rotation.z = 0; pandaLegBackLeft.rotation.z = 0; pandaLegBackRight.rotation.z = 0; }
+            if (pandaIsWalking) pandaHeadGroup.rotation.z = Math.sin(pandaTime * 1.5) * 0.04;
+            else pandaHeadGroup.rotation.z *= 0.95;
+        }
+
+        function updateFoxMovement(delta) {
+            foxCycleTimer += delta;
+            if (foxIsWalking) { if (foxCycleTimer >= WALK_DURATION) { foxIsWalking = false; foxCycleTimer = 0; } }
+            else { if (foxCycleTimer >= IDLE_DURATION) { foxIsWalking = true; foxCycleTimer = 0; } }
+            if (foxIsWalking) foxTime += delta;
+            const currentX = foxGroup.position.x, currentZ = foxGroup.position.z;
+            if (foxIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, foxDirX, foxDirZ, 0.5);
+                const o2 = checkObstacleAhead(currentX, currentZ, foxDirX, foxDirZ, 0.9);
+                const o3 = checkObstacleAhead(currentX, currentZ, foxDirX, foxDirZ, 1.3);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !foxIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = foxDirX * Math.cos(turnSign * Math.PI/2) - foxDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = foxDirX * Math.sin(turnSign * Math.PI/2) + foxDirZ * Math.cos(turnSign * Math.PI/2);
+                    foxTurnTargetX = newDirX; foxTurnTargetZ = newDirZ; foxIsTurning = true;
+                }
+            }
+            if (foxIsTurning) {
+                foxDirX += (foxTurnTargetX - foxDirX) * Math.min(1, foxTurnSpeed * delta);
+                foxDirZ += (foxTurnTargetZ - foxDirZ) * Math.min(1, foxTurnSpeed * delta);
+                const len = Math.sqrt(foxDirX * foxDirX + foxDirZ * foxDirZ);
+                if (len > 0.0001) { foxDirX /= len; foxDirZ /= len; }
+                const dot = foxDirX * foxTurnTargetX + foxDirZ * foxTurnTargetZ;
+                if (dot > 0.999) { foxDirX = foxTurnTargetX; foxDirZ = foxTurnTargetZ; foxIsTurning = false; }
+            }
+            if (foxIsWalking && !foxIsTurning) {
+                const moveSpeed = foxSpeed * delta;
+                const newX = currentX + foxDirX * moveSpeed, newZ = currentZ + foxDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { foxGroup.position.x = newX; foxGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = foxDirX * Math.cos(turnSign * Math.PI/2) - foxDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = foxDirX * Math.sin(turnSign * Math.PI/2) + foxDirZ * Math.cos(turnSign * Math.PI/2);
+                    foxTurnTargetX = newDirX; foxTurnTargetZ = newDirZ; foxIsTurning = true;
+                }
+            }
+            foxGroup.rotation.y = Math.atan2(foxDirX, foxDirZ) - Math.PI / 2;
+            foxGroup.position.y = getTerrainHeightAt(foxGroup.position.x, foxGroup.position.z);
+            if (foxIsWalking && !foxIsTurning) {
+                const legSpeed = 3.5, legAngle = 0.3;
+                foxLegFrontLeft.rotation.z = Math.sin(foxTime * legSpeed) * legAngle;
+                foxLegFrontRight.rotation.z = Math.sin(foxTime * legSpeed + Math.PI) * legAngle;
+                foxLegBackLeft.rotation.z = Math.sin(foxTime * legSpeed + Math.PI) * legAngle;
+                foxLegBackRight.rotation.z = Math.sin(foxTime * legSpeed) * legAngle;
+                foxGroup.position.y += Math.abs(Math.sin(foxTime * legSpeed)) * 0.03;
+            } else { foxLegFrontLeft.rotation.z = 0; foxLegFrontRight.rotation.z = 0; foxLegBackLeft.rotation.z = 0; foxLegBackRight.rotation.z = 0; }
+            if (foxIsWalking) { foxHeadGroup.rotation.z = Math.sin(foxTime * 1.5) * 0.05; foxTailGroup.rotation.y = Math.sin(foxTime * 2) * 0.1; }
+            else { foxHeadGroup.rotation.z *= 0.95; foxTailGroup.rotation.y *= 0.95; }
+        }
+
+        function updateLeopardMovement(delta) {
+            leopardCycleTimer += delta;
+            if (leopardIsWalking) { if (leopardCycleTimer >= WALK_DURATION) { leopardIsWalking = false; leopardCycleTimer = 0; } }
+            else { if (leopardCycleTimer >= IDLE_DURATION) { leopardIsWalking = true; leopardCycleTimer = 0; } }
+            if (leopardIsWalking) leopardTime += delta;
+            const currentX = leopardGroup.position.x, currentZ = leopardGroup.position.z;
+            if (leopardIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, leopardDirX, leopardDirZ, 0.7);
+                const o2 = checkObstacleAhead(currentX, currentZ, leopardDirX, leopardDirZ, 1.1);
+                const o3 = checkObstacleAhead(currentX, currentZ, leopardDirX, leopardDirZ, 1.5);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !leopardIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = leopardDirX * Math.cos(turnSign * Math.PI/2) - leopardDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = leopardDirX * Math.sin(turnSign * Math.PI/2) + leopardDirZ * Math.cos(turnSign * Math.PI/2);
+                    leopardTurnTargetX = newDirX; leopardTurnTargetZ = newDirZ; leopardIsTurning = true;
+                }
+            }
+            if (leopardIsTurning) {
+                leopardDirX += (leopardTurnTargetX - leopardDirX) * Math.min(1, leopardTurnSpeed * delta);
+                leopardDirZ += (leopardTurnTargetZ - leopardDirZ) * Math.min(1, leopardTurnSpeed * delta);
+                const len = Math.sqrt(leopardDirX * leopardDirX + leopardDirZ * leopardDirZ);
+                if (len > 0.0001) { leopardDirX /= len; leopardDirZ /= len; }
+                const dot = leopardDirX * leopardTurnTargetX + leopardDirZ * leopardTurnTargetZ;
+                if (dot > 0.999) { leopardDirX = leopardTurnTargetX; leopardDirZ = leopardTurnTargetZ; leopardIsTurning = false; }
+            }
+            if (leopardIsWalking && !leopardIsTurning) {
+                const moveSpeed = leopardSpeed * delta;
+                const newX = currentX + leopardDirX * moveSpeed, newZ = currentZ + leopardDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { leopardGroup.position.x = newX; leopardGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = leopardDirX * Math.cos(turnSign * Math.PI/2) - leopardDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = leopardDirX * Math.sin(turnSign * Math.PI/2) + leopardDirZ * Math.cos(turnSign * Math.PI/2);
+                    leopardTurnTargetX = newDirX; leopardTurnTargetZ = newDirZ; leopardIsTurning = true;
+                }
+            }
+            leopardGroup.rotation.y = Math.atan2(leopardDirX, leopardDirZ) - Math.PI / 2;
+            leopardGroup.position.y = getTerrainHeightAt(leopardGroup.position.x, leopardGroup.position.z);
+            if (leopardIsWalking && !leopardIsTurning) {
+                const legSpeed = 3.0, legAngle = 0.4;
+                leopardLegFrontLeft.rotation.z = Math.sin(leopardTime * legSpeed) * legAngle;
+                leopardLegFrontRight.rotation.z = Math.sin(leopardTime * legSpeed + Math.PI) * legAngle;
+                leopardLegBackLeft.rotation.z = Math.sin(leopardTime * legSpeed + Math.PI) * legAngle;
+                leopardLegBackRight.rotation.z = Math.sin(leopardTime * legSpeed) * legAngle;
+                leopardGroup.position.y += Math.abs(Math.sin(leopardTime * legSpeed)) * 0.025;
+            } else { leopardLegFrontLeft.rotation.z = 0; leopardLegFrontRight.rotation.z = 0; leopardLegBackLeft.rotation.z = 0; leopardLegBackRight.rotation.z = 0; }
+            if (leopardIsWalking) { leopardHeadGroup.rotation.z = Math.sin(leopardTime * 1.5) * 0.05; leopardTailGroup.rotation.y = Math.sin(leopardTime * 2) * 0.1; }
+            else { leopardHeadGroup.rotation.z *= 0.95; leopardTailGroup.rotation.y *= 0.95; }
+        }
+
+        function updateLionMovement(delta) {
+            lionCycleTimer += delta;
+            if (lionIsWalking) { if (lionCycleTimer >= WALK_DURATION) { lionIsWalking = false; lionCycleTimer = 0; } }
+            else { if (lionCycleTimer >= IDLE_DURATION) { lionIsWalking = true; lionCycleTimer = 0; } }
+            if (lionIsWalking) lionTime += delta;
+            const currentX = lionGroup.position.x, currentZ = lionGroup.position.z;
+            if (lionIsWalking) {
+                const o1 = checkObstacleAhead(currentX, currentZ, lionDirX, lionDirZ, 0.7);
+                const o2 = checkObstacleAhead(currentX, currentZ, lionDirX, lionDirZ, 1.1);
+                const o3 = checkObstacleAhead(currentX, currentZ, lionDirX, lionDirZ, 1.5);
+                let shouldTurn = false;
+                if (o1 === 'water' || o2 === 'water' || o3 === 'water' || o1 === 'high_column' || o2 === 'high_column' || o3 === 'high_column') shouldTurn = true;
+                if (shouldTurn && !lionIsTurning) {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = lionDirX * Math.cos(turnSign * Math.PI/2) - lionDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = lionDirX * Math.sin(turnSign * Math.PI/2) + lionDirZ * Math.cos(turnSign * Math.PI/2);
+                    lionTurnTargetX = newDirX; lionTurnTargetZ = newDirZ; lionIsTurning = true;
+                }
+            }
+            if (lionIsTurning) {
+                lionDirX += (lionTurnTargetX - lionDirX) * Math.min(1, lionTurnSpeed * delta);
+                lionDirZ += (lionTurnTargetZ - lionDirZ) * Math.min(1, lionTurnSpeed * delta);
+                const len = Math.sqrt(lionDirX * lionDirX + lionDirZ * lionDirZ);
+                if (len > 0.0001) { lionDirX /= len; lionDirZ /= len; }
+                const dot = lionDirX * lionTurnTargetX + lionDirZ * lionTurnTargetZ;
+                if (dot > 0.999) { lionDirX = lionTurnTargetX; lionDirZ = lionTurnTargetZ; lionIsTurning = false; }
+            }
+            if (lionIsWalking && !lionIsTurning) {
+                const moveSpeed = lionSpeed * delta;
+                const newX = currentX + lionDirX * moveSpeed, newZ = currentZ + lionDirZ * moveSpeed;
+                if (isInsideIslandOrBeach(newX, newZ)) { lionGroup.position.x = newX; lionGroup.position.z = newZ; }
+                else {
+                    const turnSign = Math.random() > 0.5 ? 1 : -1;
+                    const newDirX = lionDirX * Math.cos(turnSign * Math.PI/2) - lionDirZ * Math.sin(turnSign * Math.PI/2);
+                    const newDirZ = lionDirX * Math.sin(turnSign * Math.PI/2) + lionDirZ * Math.cos(turnSign * Math.PI/2);
+                    lionTurnTargetX = newDirX; lionTurnTargetZ = newDirZ; lionIsTurning = true;
+                }
+            }
+            lionGroup.rotation.y = Math.atan2(lionDirX, lionDirZ) - Math.PI / 2;
+            lionGroup.position.y = getTerrainHeightAt(lionGroup.position.x, lionGroup.position.z);
+            if (lionIsWalking && !lionIsTurning) {
+                const legSpeed = 2.8, legAngle = 0.35;
+                lionLegFrontLeft.rotation.z = Math.sin(lionTime * legSpeed) * legAngle;
+                lionLegFrontRight.rotation.z = Math.sin(lionTime * legSpeed + Math.PI) * legAngle;
+                lionLegBackLeft.rotation.z = Math.sin(lionTime * legSpeed + Math.PI) * legAngle;
+                lionLegBackRight.rotation.z = Math.sin(lionTime * legSpeed) * legAngle;
+                lionGroup.position.y += Math.abs(Math.sin(lionTime * legSpeed)) * 0.025;
+            } else { lionLegFrontLeft.rotation.z = 0; lionLegFrontRight.rotation.z = 0; lionLegBackLeft.rotation.z = 0; lionLegBackRight.rotation.z = 0; }
+            if (lionIsWalking) { lionHeadGroup.rotation.z = Math.sin(lionTime * 1.5) * 0.04; lionTailGroup.rotation.y = Math.sin(lionTime * 2) * 0.1; }
+            else { lionHeadGroup.rotation.z *= 0.95; lionTailGroup.rotation.y *= 0.95; }
+        }
+
+        // ============================================================
+        // IA DEL PERRO
+        // ============================================================
+        function updateDog(delta) {
+            dogTime += delta;
+            const playerPos = camera.position;
+
+            const facing = new THREE.Vector3();
+            camera.getWorldDirection(facing);
+            facing.y = 0;
+            if (facing.lengthSq() < 0.0001) facing.set(0, 0, -1);
+            facing.normalize();
+            playerFacing.copy(facing);
+
+            const leftDir = new THREE.Vector3(-facing.z, 0, facing.x);
+            const rightDir = new THREE.Vector3(facing.z, 0, -facing.x);
+            const forwardDir = new THREE.Vector3(facing.x, 0, facing.z);
+
+            const candidates = [
+                new THREE.Vector3(playerPos.x + leftDir.x * SIDE_OFFSET, 0, playerPos.z + leftDir.z * SIDE_OFFSET),
+                new THREE.Vector3(playerPos.x + rightDir.x * SIDE_OFFSET, 0, playerPos.z + rightDir.z * SIDE_OFFSET),
+                new THREE.Vector3(playerPos.x + forwardDir.x * SIDE_OFFSET, 0, playerPos.z + forwardDir.z * SIDE_OFFSET)
+            ];
+
+            let bestTarget = candidates[0];
+            let bestDist = Infinity;
+            for (const c of candidates) {
+                const dx = c.x - dogGroup.position.x;
+                const dz = c.z - dogGroup.position.z;
+                const d = dx * dx + dz * dz;
+                if (d < bestDist) { bestDist = d; bestTarget = c; }
+            }
+
+            const targetX = bestTarget.x;
+            const targetZ = bestTarget.z;
+
+            const dogToPlayer = new THREE.Vector3(playerPos.x - dogGroup.position.x, 0, playerPos.z - dogGroup.position.z);
+            const toTarget = new THREE.Vector3(targetX - dogGroup.position.x, 0, targetZ - dogGroup.position.z);
+            const distanceToTarget = toTarget.length();
+
+            dogHeadGroup.rotation.y = 0;
+            dogHeadGroup.rotation.x = 0;
+
+            const playerBaseY = camera.position.y - eyeHeight;
+            const heightDiffToPlayer = Math.abs(dogGroup.position.y - playerBaseY);
+
+            if (distanceToTarget < STOP_DISTANCE && heightDiffToPlayer < 1.5) {
+                const targetBodyRot = Math.atan2(facing.x, facing.z) - Math.PI / 2;
+                let diff = targetBodyRot - dogGroup.rotation.y;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                dogGroup.rotation.y += diff * Math.min(1, DOG_TURN_SPEED * delta);
+                const terrainY = getTerrainHeightAt(dogGroup.position.x, dogGroup.position.z);
+                dogGroup.position.y += (terrainY - dogGroup.position.y) * Math.min(1, 8 * delta);
+                animateDogLegs(delta, 0);
+                return;
+            }
+
+            let speed = DOG_SPEED_WALK;
+            if (distanceToTarget > RUN_DISTANCE) speed = DOG_SPEED_RUN;
+            else if (distanceToTarget > FOLLOW_DISTANCE * 1.8) speed = (DOG_SPEED_WALK + DOG_SPEED_RUN) / 2;
+
+            const dirToPlayer = new THREE.Vector3(dogToPlayer.x, 0, dogToPlayer.z);
+            if (dirToPlayer.lengthSq() < 0.0001) dirToPlayer.set(0, 0, 1);
+            dirToPlayer.normalize();
+
+            const probeDist = 0.7;
+            const anglesToTry = [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.6, -1.6, 2.0, -2.0];
+            let chosenDir = null;
+            for (const angle of anglesToTry) {
+                const cos = Math.cos(angle), sin = Math.sin(angle);
+                const testX = dogGroup.position.x + (dirToPlayer.x * cos - dirToPlayer.z * sin) * probeDist;
+                const testZ = dogGroup.position.z + (dirToPlayer.x * sin + dirToPlayer.z * cos) * probeDist;
+                if (!dogCollidesAt(testX, testZ, dogGroup.position.y)) {
+                    chosenDir = new THREE.Vector3(
+                        dirToPlayer.x * cos - dirToPlayer.z * sin,
+                        0,
+                        dirToPlayer.x * sin + dirToPlayer.z * cos
+                    );
+                    break;
+                }
+            }
+            if (!chosenDir) {
+                dogGroup.rotation.y += DOG_TURN_SPEED * 0.5 * delta;
+                animateDogLegs(delta, 0);
+                return;
+            }
+
+            const step = speed * delta;
+
+            const tryX = dogGroup.position.x + chosenDir.x * step;
+            if (!dogCollidesAt(tryX, dogGroup.position.z, dogGroup.position.y)) {
+                const newFloorY = getTerrainHeightAt(tryX, dogGroup.position.z);
+                const heightDiff = newFloorY - dogGroup.position.y;
+                if (heightDiff <= 1.5) dogGroup.position.x = tryX;
+            } else dogStuckTimer += delta;
+
+            const tryZ = dogGroup.position.z + chosenDir.z * step;
+            if (!dogCollidesAt(dogGroup.position.x, tryZ, dogGroup.position.y)) {
+                const newFloorY = getTerrainHeightAt(dogGroup.position.x, tryZ);
+                const heightDiff = newFloorY - dogGroup.position.y;
+                if (heightDiff <= 1.5) dogGroup.position.z = tryZ;
+            } else dogStuckTimer += delta;
+
+            if (dogGroup.position.distanceTo(dogLastPos) < 0.01) dogStuckTimer += delta;
+            else { dogStuckTimer = 0; dogLastPos.copy(dogGroup.position); }
+
+            if (dogStuckTimer > 0.6) {
+                dogGroup.rotation.y += DOG_TURN_SPEED * 1.5 * delta;
+                const backX = dogGroup.position.x - Math.sin(dogGroup.rotation.y) * step * 0.5;
+                const backZ = dogGroup.position.z - Math.cos(dogGroup.rotation.y) * step * 0.5;
+                if (!dogCollidesAt(backX, backZ, dogGroup.position.y)) {
+                    dogGroup.position.x = backX;
+                    dogGroup.position.z = backZ;
+                }
+                if (dogStuckTimer > 1.2) dogStuckTimer = 0;
+            }
+
+            const angleToPlayerWorld = Math.atan2(dogToPlayer.x, dogToPlayer.z) - Math.PI / 2;
+            let diff = angleToPlayerWorld - dogGroup.rotation.y;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            dogGroup.rotation.y += diff * Math.min(1, DOG_TURN_SPEED * delta);
+
+            const terrainY = getTerrainHeightAt(dogGroup.position.x, dogGroup.position.z);
+            const diffY = terrainY - dogGroup.position.y;
+            if (diffY > 0) {
+                dogGroup.position.y += diffY * Math.min(1, 15 * delta);
+            } else {
+                dogGroup.position.y += diffY * Math.min(1, 10 * delta);
+            }
+
+            animateDogLegs(delta, speed);
+        }
+
+        function dogCollidesAt(x, z, fromY) {
+            const bx = Math.floor(x), bz = Math.floor(z);
+
+            const dxPlayer = x - camera.position.x;
+            const dzPlayer = z - camera.position.z;
+            const distPlayer = Math.sqrt(dxPlayer * dxPlayer + dzPlayer * dzPlayer);
+            if (distPlayer < DOG_RADIUS + 0.4) {
+                const dogBase = fromY ?? dogGroup.position.y;
+                const playerBase = camera.position.y - eyeHeight;
+                const dy = Math.abs(dogBase - playerBase);
+                if (dy < 1.0) return true;
+            }
+
+            const dogBase = fromY ?? dogGroup.position.y;
+            for (const box of ANIMAL_BOXES) {
+                const g = box.get();
+                if (!g) continue;
+                const ax = g.position.x;
+                const az = g.position.z;
+
+                const dxA = x - ax;
+                const dzA = z - az;
+                const distA = Math.sqrt(dxA * dxA + dzA * dzA);
+                const radioA = Math.max(box.w, box.d) / 2 + DOG_RADIUS;
+
+                if (distA < radioA) {
+                    const animalBase = g.position.y + box.yOff;
+                    const animalTop = animalBase + box.h;
+                    const dogTop = dogBase + 0.9 * DOG_SCALE;
+                    if (dogBase < animalTop && dogTop > animalBase) return true;
+                }
+            }
+
+            const baseY = Math.floor(dogBase);
+            if (blockMap.has(`${bx},${baseY + 1},${bz}`)) return true;
+            return false;
+        }
+
+        function animateDogLegs(delta, speed) {
+            const speedFactor = speed / DOG_SPEED_RUN;
+            const legSpeed = 3.2 + speedFactor * 4;
+            const legAngle = 0.2 + speedFactor * 0.35;
+            if (speed > 0.01) {
+                dogTime += delta * legSpeed;
+                dogLegFrontLeft.rotation.z  = Math.sin(dogTime) * legAngle;
+                dogLegFrontRight.rotation.z = Math.sin(dogTime + Math.PI) * legAngle;
+                dogLegBackLeft.rotation.z   = Math.sin(dogTime + Math.PI) * legAngle;
+                dogLegBackRight.rotation.z  = Math.sin(dogTime) * legAngle;
+                dogTail.rotation.z = -0.6 + Math.sin(dogTime * 3) * 0.15;
+            } else {
+                dogLegFrontLeft.rotation.z  *= 0.9;
+                dogLegFrontRight.rotation.z *= 0.9;
+                dogLegBackLeft.rotation.z   *= 0.9;
+                dogLegBackRight.rotation.z  *= 0.9;
+                dogTail.rotation.z = -0.6 + Math.sin(dogTime * 2) * 0.05;
+            }
+        }
+
+        // ============================================================
+        // COLISIONES 3D
+        // ============================================================
+        const ANIMAL_BOXES = [
+            { get: () => cowGroup,     w: 1.8 * COW_SCALE,     d: 1.4 * COW_SCALE,     h: 1.8 * COW_SCALE,     yOff: 0.5 * COW_SCALE },
+            { get: () => horseGroup,   w: 2.4 * HORSE_SCALE,   d: 1.2 * HORSE_SCALE,   h: 2.0 * HORSE_SCALE,   yOff: 0.4 * HORSE_SCALE },
+            { get: () => pigGroup,     w: 1.6 * PIG_SCALE,     d: 1.2 * PIG_SCALE,     h: 1.3 * PIG_SCALE,     yOff: 0.3 * PIG_SCALE },
+            { get: () => chickenGroup, w: 1.0 * CHICKEN_SCALE, d: 0.9 * CHICKEN_SCALE, h: 1.0 * CHICKEN_SCALE, yOff: 0.3 * CHICKEN_SCALE },
+            { get: () => tigerGroup,   w: 2.2 * TIGER_SCALE,   d: 1.0 * TIGER_SCALE,   h: 1.6 * TIGER_SCALE,   yOff: 0.4 * TIGER_SCALE },
+            { get: () => pandaGroup,   w: 1.8 * PANDA_SCALE,   d: 1.4 * PANDA_SCALE,   h: 1.6 * PANDA_SCALE,   yOff: 0.35 * PANDA_SCALE },
+            { get: () => foxGroup,     w: 1.8 * FOX_SCALE,     d: 0.9 * FOX_SCALE,     h: 1.2 * FOX_SCALE,     yOff: 0.3 * FOX_SCALE },
+            { get: () => leopardGroup, w: 2.0 * LEOPARD_SCALE, d: 1.0 * LEOPARD_SCALE, h: 1.6 * LEOPARD_SCALE, yOff: 0.4 * LEOPARD_SCALE },
+            { get: () => lionGroup,    w: 2.2 * LION_SCALE,    d: 1.0 * LION_SCALE,    h: 1.7 * LION_SCALE,    yOff: 0.4 * LION_SCALE }
+        ];
+
+        function pushPlayerFromBox(animalX, animalZ, animalW, animalD, animalH, animalY, playerRadius) {
+            const playerX = camera.position.x;
+            const playerZ = camera.position.z;
+            const playerBaseY = camera.position.y - eyeHeight;
+            const playerTopY = playerBaseY + PLAYER_HEIGHT;
+
+            const animalMinX = animalX - animalW / 2;
+            const animalMaxX = animalX + animalW / 2;
+            const animalMinZ = animalZ - animalD / 2;
+            const animalMaxZ = animalZ + animalD / 2;
+            const animalMinY = animalY;
+            const animalMaxY = animalY + animalH;
+
+            if (playerTopY <= animalMinY || playerBaseY >= animalMaxY) return;
+
+            const closestX = Math.max(animalMinX, Math.min(playerX, animalMaxX));
+            const closestZ = Math.max(animalMinZ, Math.min(playerZ, animalMaxZ));
+
+            const dx = playerX - closestX;
+            const dz = playerZ - closestZ;
+            const distSq = dx * dx + dz * dz;
+
+            if (distSq < playerRadius * playerRadius) {
+                const dist = Math.sqrt(distSq);
+                if (dist < 0.0001) {
+                    const centerX = (animalMinX + animalMaxX) / 2;
+                    const centerZ = (animalMinZ + animalMaxZ) / 2;
+                    const pushX = playerX - centerX;
+                    const pushZ = playerZ - centerZ;
+                    const len = Math.sqrt(pushX * pushX + pushZ * pushZ) || 1;
+                    camera.position.x += (pushX / len) * playerRadius;
+                    camera.position.z += (pushZ / len) * playerRadius;
+                } else {
+                    const overlap = playerRadius - dist;
+                    camera.position.x += (dx / dist) * overlap;
+                    camera.position.z += (dz / dist) * overlap;
+                }
+            }
+        }
+
+        function pushPlayerFromAnimals() {
+            for (const box of ANIMAL_BOXES) {
+                const g = box.get();
+                if (!g) continue;
+                pushPlayerFromBox(g.position.x, g.position.z, box.w, box.d, box.h, g.position.y + box.yOff, 0.4);
+            }
+        }
+
+        function pushPlayerFromDog() {
+            pushPlayerFromBox(
+                dogGroup.position.x, dogGroup.position.z,
+                1.5 * DOG_SCALE, 0.9 * DOG_SCALE, 1.1 * DOG_SCALE,
+                dogGroup.position.y + 0.3 * DOG_SCALE,
+                0.4
+            );
+        }
+
+        // ============================================================
+        // FÍSICA DEL JUGADOR — 100% SÓLIDA
+        // ============================================================
+        const PLAYER_HEIGHT = 1.8;
+        const PLAYER_RADIUS = 0.3;
+        const eyeHeight = 1.62;
+        const gravity = -25;
+        const jumpSpeed = 7;
+        const STEP_HEIGHT = 1.0;
+        let velocityY = 0;
+        let isOnGround = false;
+        let playerLimitRx = rx + beachWidth + 0.5;
+        let playerLimitRz = rz + beachWidth + 0.5;
+        function updatePlayerLimit() { playerLimitRx = rx + beachWidth + 0.5; playerLimitRz = rz + beachWidth + 0.5; }
+
+        function anyBlockInAABB(minX, maxX, minY, maxY, minZ, maxZ) {
+            const bx0 = Math.floor(minX);
+            const bx1 = Math.ceil(maxX) - 1;
+            const by0 = Math.floor(minY);
+            const by1 = Math.ceil(maxY) - 1;
+            const bz0 = Math.floor(minZ);
+            const bz1 = Math.ceil(maxZ) - 1;
+
+            for (let bx = bx0; bx <= bx1; bx++) {
+                for (let by = by0; by <= by1; by++) {
+                    for (let bz = bz0; bz <= bz1; bz++) {
+                        if (blockMap.has(`${bx},${by},${bz}`)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function getSurfaceYInColumn(bx, bz, maxBy) {
+            for (let y = maxBy; y >= groundY - 1; y--) {
+                if (blockMap.has(`${bx},${y},${bz}`)) return y + 1;
+            }
+            return -Infinity;
+        }
+
+        function getFloorUnderPlayer(px, pz, baseY) {
+            const minX = px - PLAYER_RADIUS;
+            const maxX = px + PLAYER_RADIUS;
+            const minZ = pz - PLAYER_RADIUS;
+            const maxZ = pz + PLAYER_RADIUS;
+
+            const bx0 = Math.floor(minX);
+            const bx1 = Math.ceil(maxX) - 1;
+            const bz0 = Math.floor(minZ);
+            const bz1 = Math.ceil(maxZ) - 1;
+
+            const maxBy = Math.floor(baseY + STEP_HEIGHT);
+            let best = -Infinity;
+            for (let bx = bx0; bx <= bx1; bx++) {
+                for (let bz = bz0; bz <= bz1; bz++) {
+                    const sy = getSurfaceYInColumn(bx, bz, maxBy);
+                    if (sy > best) best = sy;
+                }
+            }
+            return best === -Infinity ? groundY : best;
+        }
+
+        function tryMovePlayer(oldX, oldZ, newX, newZ, baseY) {
+            const newFloorY = getFloorUnderPlayer(newX, newZ, baseY);
+            const heightDiff = newFloorY - baseY;
+
+            if (heightDiff > STEP_HEIGHT) {
+                return { x: oldX, z: oldZ, baseY: baseY, blocked: true };
+            }
+
+            const finalBase = newFloorY;
+
+            const minX = newX - PLAYER_RADIUS;
+            const maxX = newX + PLAYER_RADIUS;
+            const minZ = newZ - PLAYER_RADIUS;
+            const maxZ = newZ + PLAYER_RADIUS;
+            const minY = finalBase;
+            const maxY = finalBase + PLAYER_HEIGHT;
+
+            if (anyBlockInAABB(minX, maxX, minY, maxY, minZ, maxZ)) {
+                return { x: oldX, z: oldZ, baseY: baseY, blocked: true };
+            }
+
+            return { x: newX, z: newZ, baseY: finalBase, blocked: false };
+        }
+
+        // ============================================================
+        // PONER/DESTRUIR BLOQUES
+        // CORREGIDO: Permite colocar bloques justo debajo de los pies
+        // ============================================================
+        function placeBlock(bx, by, bz, typeId) {
+            bx = Math.round(bx); by = Math.round(by); bz = Math.round(bz);
+            if (!isInsideIslandOrBeach(bx, bz)) return false;
+            const key = `${bx},${by},${bz}`;
+            if (blockMap.has(key)) return false;
+
+            const pMinX = camera.position.x - PLAYER_RADIUS;
+            const pMaxX = camera.position.x + PLAYER_RADIUS;
+            const pMinZ = camera.position.z - PLAYER_RADIUS;
+            const pMaxZ = camera.position.z + PLAYER_RADIUS;
+            const pMinY = camera.position.y - eyeHeight;      // pies del jugador
+            const pMaxY = pMinY + PLAYER_HEIGHT;              // cabeza del jugador
+
+            const bMinX = bx, bMaxX = bx + 1;
+            const bMinY = by, bMaxY = by + 1;
+            const bMinZ = bz, bMaxZ = bz + 1;
+
+            const overlapX = pMaxX > bMinX && pMinX < bMaxX;
+            const overlapY = pMaxY > bMinY && pMinY < bMaxY;
+            const overlapZ = pMaxZ > bMinZ && pMinZ < bMaxZ;
+
+            // ✅ CORRECCIÓN: permitir el bloque justo debajo de los pies.
+            // Es el caso en que el techo del bloque coincide con la base del
+            // jugador (con una pequeña tolerancia) y el jugador está encima
+            // de él en X/Z. Así se puede construir una torre hacia arriba.
+            const isDirectlyUnderFeet =
+                Math.abs(bMaxY - pMinY) < 0.15 &&   // el techo del bloque toca los pies
+                overlapX && overlapZ;                // y estamos encima en XZ
+
+            if (overlapX && overlapY && overlapZ && !isDirectlyUnderFeet) {
+                return false;
+            }
+
+            blockMap.set(key, { x: bx, y: by, z: bz, type: typeId });
+            rebuildWorldMesh();
+            return true;
+        }
+        function removeBlockAt(bx, by, bz) {
+            bx = Math.round(bx); by = Math.round(by); bz = Math.round(bz);
+            if (by === groundY) return false;
+            const key = `${bx},${by},${bz}`;
+            if (!blockMap.has(key)) return false;
+            blockMap.delete(key);
+            rebuildWorldMesh();
+            return true;
+        }
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // ============================================================
+        // TECLADO
+        // ============================================================
+        const keyState = { w: false, a: false, s: false, d: false, up: false, down: false, left: false, right: false };
+        document.addEventListener('keydown', (event) => {
+            const code = event.code;
+            if (code === 'KeyW') { keyState.w = true; event.preventDefault(); }
+            else if (code === 'KeyA') { keyState.a = true; event.preventDefault(); }
+            else if (code === 'KeyS') { keyState.s = true; event.preventDefault(); }
+            else if (code === 'KeyD') { keyState.d = true; event.preventDefault(); }
+            else if (code === 'ArrowUp') { keyState.up = true; event.preventDefault(); }
+            else if (code === 'ArrowDown') { keyState.down = true; event.preventDefault(); }
+            else if (code === 'ArrowLeft') { keyState.left = true; event.preventDefault(); }
+            else if (code === 'ArrowRight') { keyState.right = true; event.preventDefault(); }
+            else if (code === 'KeyZ') { event.preventDefault(); rx += EXPAND_AMOUNT; rz += EXPAND_AMOUNT; generateIslandIncremental(); updatePlayerLimit(); expandLabel.classList.add('key-pressed'); setTimeout(() => expandLabel.classList.remove('key-pressed'), 200); }
+            else if (code === 'KeyR') { event.preventDefault(); if (confirm('¿Seguro que quieres borrar la partida guardada y empezar de cero?')) { clearSave(); location.reload(); } }
+            else if (code === 'Space') { event.preventDefault(); if (isOnGround) { velocityY = jumpSpeed; isOnGround = false; } }
+            else if (code === 'Digit1') { selectedBlock = 1; event.preventDefault(); }
+            else if (code === 'Digit2') { selectedBlock = 2; event.preventDefault(); }
+            else if (code === 'Digit3') { selectedBlock = 3; event.preventDefault(); }
+            else if (code === 'Digit4') { selectedBlock = 4; event.preventDefault(); }
+            else if (code === 'Digit5') { selectedBlock = 5; event.preventDefault(); }
+            else if (code === 'Digit6') { selectedBlock = 6; event.preventDefault(); }
+        });
+        document.addEventListener('keyup', (event) => {
+            const code = event.code;
+            if (code === 'KeyW') { keyState.w = false; event.preventDefault(); }
+            else if (code === 'KeyA') { keyState.a = false; event.preventDefault(); }
+            else if (code === 'KeyS') { keyState.s = false; event.preventDefault(); }
+            else if (code === 'KeyD') { keyState.d = false; event.preventDefault(); }
+            else if (code === 'ArrowUp') { keyState.up = false; event.preventDefault(); }
+            else if (code === 'ArrowDown') { keyState.down = false; event.preventDefault(); }
+            else if (code === 'ArrowLeft') { keyState.left = false; event.preventDefault(); }
+            else if (code === 'ArrowRight') { keyState.right = false; event.preventDefault(); }
+        });
+
+        // ============================================================
+        // RATÓN
+        // ============================================================
+        renderer.domElement.addEventListener('mousedown', (event) => {
+            if (!controls.isLocked) return;
+            event.preventDefault();
+            mouse.x = 0; mouse.y = 0;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(blockGroup.children);
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                const mesh = hit.object;
+                if (!mesh.isInstancedMesh || !mesh.userData.blockPositions) return;
+                const pos = mesh.userData.blockPositions[hit.instanceId];
+                if (!pos) return;
+                if (event.button === 0) {
+                    const normal = hit.face.normal.clone().round();
+                    const newX = pos.x + normal.x, newY = pos.y + normal.y, newZ = pos.z + normal.z;
+                    if (!isInsideIslandOrBeach(newX, newZ)) return;
+                    if (placeBlock(newX, newY, newZ, selectedBlock)) saveGame();
+                } else if (event.button === 2) {
+                    if (removeBlockAt(pos.x, pos.y, pos.z)) saveGame();
+                }
+            }
+        });
+        renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        window.addEventListener('beforeunload', () => { saveGame(); });
+
+        // ============================================================
+        // BUCLE PRINCIPAL
+        // ============================================================
+        let lastTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            const currentTime = performance.now();
+            const delta = Math.min((currentTime - lastTime) / 1000, 0.05);
+            lastTime = currentTime;
+            if (currentTime - lastSaveTime > AUTO_SAVE_INTERVAL) { lastSaveTime = currentTime; saveGame(); }
+
+            evitarChoquesEntreAnimales();
+
+            updateCowMovement(delta); updateHorseMovement(delta); updatePigMovement(delta); updateChickenMovement(delta);
+            updateTigerMovement(delta); updatePandaMovement(delta); updateFoxMovement(delta); updateLeopardMovement(delta); updateLionMovement(delta);
+
+            updateDog(delta);
+
+            if (controls.isLocked) {
+                const speed = 6.0;
+                const forward = new THREE.Vector3(0, 0, -1); forward.applyQuaternion(camera.quaternion); forward.y = 0; forward.normalize();
+                const right = new THREE.Vector3(1, 0, 0); right.applyQuaternion(camera.quaternion); right.y = 0; right.normalize();
+                const moveVector = new THREE.Vector3(0, 0, 0);
+                if (keyState.w) moveVector.add(forward);
+                if (keyState.s) moveVector.sub(forward);
+                if (keyState.a) moveVector.sub(right);
+                if (keyState.d) moveVector.add(right);
+                if (keyState.up) moveVector.add(forward);
+                if (keyState.down) moveVector.sub(forward);
+                if (keyState.left) moveVector.sub(right);
+                if (keyState.right) moveVector.add(right);
+
+                let currentBaseY = camera.position.y - eyeHeight;
+
+                if (moveVector.length() > 0) {
+                    moveVector.normalize(); moveVector.multiplyScalar(speed * delta);
+                    const oldX = camera.position.x, oldZ = camera.position.z;
+
+                    let res = tryMovePlayer(oldX, oldZ, oldX + moveVector.x, oldZ, currentBaseY);
+                    let px = res.x, pz = res.z;
+                    currentBaseY = res.baseY;
+
+                    res = tryMovePlayer(px, pz, px, pz + moveVector.z, currentBaseY);
+                    px = res.x; pz = res.z;
+                    currentBaseY = res.baseY;
+
+                    camera.position.x = px;
+                    camera.position.z = pz;
+                }
+
+                pushPlayerFromAnimals();
+                pushPlayerFromDog();
+
+                const posX = camera.position.x, posZ = camera.position.z;
+                const val = (posX * posX) / (playerLimitRx * playerLimitRx) + (posZ * posZ) / (playerLimitRz * playerLimitRz);
+                if (val > 1.0) { const ratio = 1.0 / Math.sqrt(val); camera.position.x *= ratio * 0.99; camera.position.z *= ratio * 0.99; }
+
+                velocityY += gravity * delta;
+                camera.position.y += velocityY * delta;
+
+                const floorY = getFloorUnderPlayer(camera.position.x, camera.position.z, camera.position.y - eyeHeight + STEP_HEIGHT);
+                const newBase = camera.position.y - eyeHeight;
+                if (newBase <= floorY) {
+                    camera.position.y = floorY + eyeHeight;
+                    velocityY = 0;
+                    isOnGround = true;
+                } else {
+                    isOnGround = false;
+                }
+
+                if (velocityY > 0) {
+                    const headY = camera.position.y - eyeHeight + PLAYER_HEIGHT;
+                    const bx = Math.floor(camera.position.x);
+                    const bz = Math.floor(camera.position.z);
+                    const checkY = Math.floor(headY);
+                    if (blockMap.has(`${bx},${checkY},${bz}`)) {
+                        velocityY = 0;
+                        camera.position.y = checkY - PLAYER_HEIGHT + eyeHeight - 0.001;
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('🧱 Bloques 100% sólidos — ahora puedes poner bloques justo debajo de tus pies');
+    </script>
+</body>
+</html>
